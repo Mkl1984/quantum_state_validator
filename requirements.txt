@@ -1,0 +1,37 @@
+# ============================================
+# QUANTUM STATE VALIDATOR - Requirements
+# ============================================
+# Projet: Vérification d'états quantiques par ML
+# Date: 2024-11-11
+# Python: 3.10+
+# ============================================
+
+# ----- Core Scientific Computing -----
+numpy>=1.24.0          # Calcul numérique, vecteurs, matrices
+scipy>=1.10.0          # Fonctions scientifiques avancées
+pandas>=2.0.0          # Manipulation de données tabulaires
+
+# ----- Machine Learning -----
+scikit-learn>=1.3.0    # Algorithmes ML (classification, régression)
+
+# ----- Visualization -----
+matplotlib>=3.7.0      # Visualisation 2D statique
+plotly>=5.14.0         # Visualisation interactive 2D/3D
+seaborn>=0.12.0        # Visualisation statistique (sur matplotlib)
+
+# ----- Jupyter Environment -----
+jupyter>=1.0.0         # Notebooks interactifs
+notebook>=7.0.0        # Interface Jupyter Notebook
+ipywidgets>=8.0.0      # Widgets interactifs (sliders, etc.)
+
+# ----- Utilities -----
+tqdm>=4.65.0           # Barres de progression
+python-dotenv>=1.0.0   # Gestion variables d'environnement
+
+# ----- Development & Quality -----
+black>=23.0.0          # Formatage automatique du code
+pylint>=2.17.0         # Analyse statique (qualité du code)
+
+# ----- Optional (pour plus tard) -----
+# joblib>=1.3.0        # Sauvegarde modèles efficace
+# pyyaml>=6.0          # Lecture fichiers config YAML

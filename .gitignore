@@ -1,0 +1,53 @@
+# ============================================
+# QUANTUM STATE VALIDATOR - .gitignore
+# ============================================
+
+# ----- Environnements Python -----
+venv/
+env/
+ENV/
+.venv
+qsv_env/
+
+# ----- Fichiers Python -----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# ----- Jupyter Notebooks -----
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ----- Données (si volumineuses) -----
+data/raw/*.csv
+data/processed/*.csv
+# Garde les README pour documenter la structure
+!data/raw/README.md
+!data/processed/README.md
+
+# ----- Modèles entraînés -----
+models/*.pkl
+models/*.joblib
+models/*.h5
+!models/README.md
+
+# ----- Fichiers de log -----
+*.log
+
+# ----- IDE -----
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ----- Système -----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ----- Autres -----
+*.bak
+*.tmp
+~$*
