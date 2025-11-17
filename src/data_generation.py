@@ -1,16 +1,16 @@
 """
 Module: data_generation.py
 Objectif: Générer des états quantiques valides et invalides
-Auteur: [Ton nom]
+Auteur: Mkl Zenin
 Date: 2024-11-12
 
-Ce module contient les fonctions pour créer des datasets d'états quantiques
-avec différentes stratégies de génération.
+Ce module contient les fonctions pour créer des datasets d'états quantiques avec différentes stratégies de génération.
 """
 
 import numpy as np
 from typing import Tuple, Optional
 import warnings
+from pathlib import Path
 
 
 def generate_valid_states(
@@ -20,59 +20,6 @@ def generate_valid_states(
     alpha: float = 1.0,
     seed: Optional[int] = None,
 ) -> np.ndarray:
-    """
-    Génère des états quantiques valides (normalisés).
-
-    Paramètres
-    ----------
-    n_samples : int
-        Nombre d'états à générer.
-
-    dim : int
-        Dimension de l'espace de Hilbert (nombre de composantes).
-        Exemples: dim=2 (qubit), dim=3 (qutrit), dim=4, etc.
-
-    strategy : str, optional
-        Stratégie de génération:
-        - "random" : génération gaussienne + normalisation (défaut)
-        - "dirichlet" : distribution de Dirichlet pour les probabilités
-        - "basis" : états purs de la base canonique
-
-    alpha : float, optional
-        Paramètre de concentration pour stratégie "dirichlet".
-        - alpha = 1.0 : uniforme (défaut)
-        - alpha > 1.0 : favorise probabilités équilibrées
-        - alpha < 1.0 : favorise probabilités déséquilibrées
-
-    seed : int, optional
-        Graine aléatoire pour reproductibilité.
-        Si None, utilise l'état aléatoire actuel de NumPy.
-
-    Retourne
-    --------
-    states : np.ndarray
-        Tableau de shape (n_samples, dim) contenant les états générés.
-        Chaque ligne est un état quantique normalisé (dtype=complex128).
-
-    Raises
-    ------
-    ValueError
-        Si strategy n'est pas reconnue.
-        Si n_samples <= 0 ou dim <= 0.
-
-    Exemples
-    --------
-    >>> # Générer 100 qubits avec stratégie random
-    >>> states = generate_valid_states(100, dim=2, strategy="random", seed=42)
-    >>> states.shape
-    (100, 2)
-    >>> np.allclose(np.sum(np.abs(states)**2, axis=1), 1.0)
-    True
-
-    Notes
-    -----
-    Toutes les stratégies garantissent que ||ψ||² = 1 pour chaque état.
-    """
 
     # === Validation des paramètres ===
     if n_samples <= 0:
@@ -160,34 +107,6 @@ def generate_valid_states(
 def verify_normalization(
     states: np.ndarray, tolerance: float = 1e-6
 ) -> Tuple[bool, np.ndarray]:
-    """
-    Vérifie que tous les états d'un batch sont normalisés.
-
-    Paramètres
-    ----------
-    states : np.ndarray
-        Tableau de shape (n_samples, dim) contenant les états.
-
-    tolerance : float, optional
-        Tolérance numérique pour la vérification.
-
-    Retourne
-    --------
-    all_valid : bool
-        True si TOUS les états sont normalisés, False sinon.
-
-    norms_squared : np.ndarray
-        Tableau de shape (n_samples,) contenant ||ψ||² pour chaque état.
-
-    Exemples
-    --------
-    >>> states = generate_valid_states(10, dim=3, seed=42)
-    >>> all_valid, norms = verify_normalization(states)
-    >>> all_valid
-    True
-    >>> np.allclose(norms, 1.0)
-    True
-    """
 
     # Calcule ||ψ||² pour chaque état
     norms_squared = np.sum(np.abs(states) ** 2, axis=1)
@@ -244,7 +163,7 @@ def print_strategy_info():
     print("=" * 70)
 
     for strategy, description in info.items():
-        print(f"\n📌 {strategy.upper()}")
+        print(f"\n {strategy.upper()}")
         print(f"   {description}")
 
     print("\n" + "=" * 70)
@@ -266,65 +185,6 @@ def generate_invalid_states(
     extreme_prob: float = 0.1,
     seed: Optional[int] = None,
 ) -> np.ndarray:
-    """
-    Génère des états quantiques invalides (non normalisés).
-
-    Paramètres
-    ----------
-    n_samples : int
-        Nombre d'états invalides à générer.
-
-    dim : int
-        Dimension de l'espace de Hilbert.
-
-    strategy : str, optional
-        Stratégie de génération:
-        - "scaling" : multiplie des états valides par un facteur k ≠ 1 (défaut)
-        - "noise" : ajoute du bruit à des états valides sans renormaliser
-        - "direct" : génère directement sans normalisation
-        - "mixed" : mélange des 3 stratégies + cas extrêmes
-
-    scale_range : tuple of float, optional
-        Pour stratégie "scaling": intervalle [k_min, k_max] pour le facteur k.
-        Par défaut: (0.1, 2.0) en évitant [0.95, 1.05] pour éviter ambiguïté.
-
-    noise_level : float, optional
-        Pour stratégie "noise": intensité du bruit (epsilon).
-        Par défaut: 0.3
-
-    extreme_prob : float, optional
-        Pour stratégie "mixed": probabilité de générer un cas extrême.
-        Par défaut: 0.1 (10% de cas extrêmes)
-
-    seed : int, optional
-        Graine aléatoire pour reproductibilité.
-
-    Retourne
-    --------
-    states : np.ndarray
-        Tableau de shape (n_samples, dim) contenant les états invalides.
-        dtype=complex128.
-        Garantie: AUCUN état n'est normalisé (||ψ||² ≠ 1).
-
-    Raises
-    ------
-    ValueError
-        Si strategy n'est pas reconnue.
-
-    Exemples
-    --------
-    >>> states = generate_invalid_states(100, dim=3, strategy="scaling", seed=42)
-    >>> all_valid, norms = verify_normalization(states)
-    >>> all_valid
-    False
-    >>> (norms != 1.0).all()
-    True
-
-    Notes
-    -----
-    Pour stratégie "scaling", on évite k ∈ [0.95, 1.05] pour créer une
-    séparation claire entre états valides et invalides.
-    """
 
     # Validation
     if n_samples <= 0:
@@ -348,7 +208,9 @@ def generate_invalid_states(
             n_samples=n_samples,
             dim=dim,
             strategy="random",
-            seed=rng.integers(0, 1e9),  # Seed aléatoire différent
+            seed=int(
+                rng.integers(0, int(1e9))
+            ),  # Seed aléatoire différent (cast to Python int)
         )
 
         # Génère des facteurs de scaling k
@@ -381,7 +243,10 @@ def generate_invalid_states(
     elif strategy == "noise":
         # Génère des états valides
         states_valid = generate_valid_states(
-            n_samples=n_samples, dim=dim, strategy="random", seed=rng.integers(0, 1e9)
+            n_samples=n_samples,
+            dim=dim,
+            strategy="random",
+            seed=int(rng.integers(0, int(1e9))),
         )
 
         # Génère du bruit complexe
@@ -431,7 +296,7 @@ def generate_invalid_states(
                 dim,
                 strategy="scaling",
                 scale_range=scale_range,
-                seed=rng.integers(0, 1e9),
+                seed=int(rng.integers(0, int(1e9))),
             )
             states[idx : idx + n_scaling] = states_scaling
             idx += n_scaling
@@ -443,7 +308,7 @@ def generate_invalid_states(
                 dim,
                 strategy="noise",
                 noise_level=noise_level,
-                seed=rng.integers(0, 1e9),
+                seed=int(rng.integers(0, int(1e9))),
             )
             states[idx : idx + n_noise] = states_noise
             idx += n_noise
@@ -451,7 +316,7 @@ def generate_invalid_states(
         # 4. Direct
         if n_direct > 0:
             states_direct = generate_invalid_states(
-                n_direct, dim, strategy="direct", seed=rng.integers(0, 1e9)
+                n_direct, dim, strategy="direct", seed=int(rng.integers(0, int(1e9)))
             )
             states[idx : idx + n_direct] = states_direct
 
@@ -475,16 +340,7 @@ def generate_invalid_states(
 
 
 def _generate_extreme_states(n_samples: int, dim: int, rng) -> np.ndarray:
-    """
-    Génère des cas extrêmes (outliers) pour tester la robustesse.
 
-    Cas générés:
-    - États nuls ou quasi-nuls (||ψ||² ≈ 0)
-    - États très grands (||ψ||² >> 1)
-    - États avec une composante dominante énorme
-
-    Fonction interne, pas destinée à être utilisée directement.
-    """
     states = np.zeros((n_samples, dim), dtype=complex)
 
     for i in range(n_samples):
@@ -508,9 +364,7 @@ def _generate_extreme_states(n_samples: int, dim: int, rng) -> np.ndarray:
 
 
 def get_invalid_strategy_info() -> dict:
-    """
-    Retourne les descriptions des stratégies de génération d'états invalides.
-    """
+
     info = {
         "scaling": (
             "Multiplie des états valides par un facteur k ≠ 1. "
@@ -539,9 +393,7 @@ def get_invalid_strategy_info() -> dict:
 
 
 def print_invalid_strategy_info():
-    """
-    Affiche les informations sur les stratégies d'états invalides.
-    """
+
     info = get_invalid_strategy_info()
 
     print("=" * 70)
@@ -555,8 +407,230 @@ def print_invalid_strategy_info():
     print("\n" + "=" * 70)
 
 
+# ============================================================================
+# CRÉATION DU DATASET COMPLET
+# ============================================================================
+
+import pandas as pd
+
+
+def create_dataset(
+    n_valid: int,
+    n_invalid: int,
+    dim: int,
+    valid_strategy: str = "random",
+    invalid_strategy: str = "mixed",
+    valid_kwargs: Optional[dict] = None,
+    invalid_kwargs: Optional[dict] = None,
+    seed: Optional[int] = None,
+    shuffle: bool = True,
+) -> pd.DataFrame:
+
+    # Initialisation du générateur aléatoire
+    rng = np.random.default_rng(seed)
+
+    # Graines pour les sous-générateurs (pour reproductibilité)
+    # Utilise des bornes entières et convertit le résultat en int Python
+    seed_valid = int(rng.integers(0, 1_000_000_000)) if seed is not None else None
+    seed_invalid = int(rng.integers(0, 1_000_000_000)) if seed is not None else None
+
+    # === GÉNÉRATION DES ÉTATS VALIDES ===
+    print(f"Génération de {n_valid} états valides (stratégie: {valid_strategy})...")
+
+    valid_kwargs = valid_kwargs or {}
+    states_valid = generate_valid_states(
+        n_samples=n_valid,
+        dim=dim,
+        strategy=valid_strategy,
+        seed=seed_valid,
+        **valid_kwargs,
+    )
+
+    # === GÉNÉRATION DES ÉTATS INVALIDES ===
+    print(
+        f"Génération de {n_invalid} états invalides (stratégie: {invalid_strategy})..."
+    )
+
+    invalid_kwargs = invalid_kwargs or {}
+    states_invalid = generate_invalid_states(
+        n_samples=n_invalid,
+        dim=dim,
+        strategy=invalid_strategy,
+        seed=seed_invalid,
+        **invalid_kwargs,
+    )
+
+    # === CONSTRUCTION DU DATAFRAME ===
+    print("Construction du DataFrame...")
+
+    # Combine les deux ensembles
+    all_states = np.vstack([states_valid, states_invalid])
+    n_total = n_valid + n_invalid
+
+    # Crée les labels
+    labels = np.concatenate(
+        [
+            np.ones(n_valid, dtype=int),  # 1 pour valides
+            np.zeros(n_invalid, dtype=int),  # 0 pour invalides
+        ]
+    )
+
+    # Calcule les normes²
+    norms_squared = np.sum(np.abs(all_states) ** 2, axis=1)
+
+    # Construit le dictionnaire de données
+    data_dict = {}
+
+    # Colonne state_id
+    data_dict["state_id"] = np.arange(n_total)
+
+    # Assure que all_states est un ndarray de dtype complex pour des opérations sûres
+    all_states = np.asarray(all_states, dtype=complex)
+
+    # Colonnes c{i}_real et c{i}_imag (utilise les fonctions numpy pour éviter les problèmes de typage)
+    for i in range(dim):
+        data_dict[f"c{i}_real"] = np.real(all_states[:, i])
+        data_dict[f"c{i}_imag"] = np.imag(all_states[:, i])
+
+    # Colonne norm_squared
+    data_dict["norm_squared"] = norms_squared
+
+    # Colonne is_valid (target)
+    data_dict["is_valid"] = labels
+
+    # Crée le DataFrame
+    df = pd.DataFrame(data_dict)
+
+    # === MÉLANGE (SHUFFLE) ===
+    if shuffle:
+        print("Mélange du dataset...")
+        df = df.sample(frac=1.0, random_state=seed).reset_index(drop=True)
+        # Réattribue les state_id après shuffle
+        df["state_id"] = np.arange(len(df))
+
+    # === STATISTIQUES ===
+    print("\n" + "=" * 70)
+    print("DATASET CRÉÉ")
+    print("=" * 70)
+    print(f"Shape: {df.shape}")
+    print(f"Dimension: {dim}")
+    print(f"États valides: {n_valid} ({n_valid/n_total*100:.1f}%)")
+    print(f"États invalides: {n_invalid} ({n_invalid/n_total*100:.1f}%)")
+    print(f"\n Distribution de is_valid:")
+    print(df["is_valid"].value_counts().sort_index())
+
+    print(f"\n Statistiques de norm_squared:")
+    print(df["norm_squared"].describe())
+
+    print("=" * 70)
+
+    return df
+
+
+def save_dataset(
+    df: pd.DataFrame,
+    filename: str = "quantum_states_dataset.csv",
+    data_dir: str = "data/processed",
+) -> Path:
+
+    # Crée le dossier si nécessaire
+    data_path = Path(data_dir)
+    data_path.mkdir(parents=True, exist_ok=True)
+
+    # Chemin complet
+    filepath = data_path / filename
+
+    # Sauvegarde
+    df.to_csv(filepath, index=False)
+
+    # Taille du fichier
+    file_size = filepath.stat().st_size / 1024  # en KB
+
+    print(f"\n Dataset sauvegardé:")
+    print(f"   Chemin: {filepath}")
+    print(f"   Taille: {file_size:.2f} KB")
+    print(f"   Lignes: {len(df)}")
+    print(f"   Colonnes: {len(df.columns)}")
+
+    return filepath
+
+
+def load_dataset(
+    filename: str = "quantum_states_dataset.csv", data_dir: str = "data/processed"
+) -> pd.DataFrame:
+
+    filepath = Path(data_dir) / filename
+
+    if not filepath.exists():
+        raise FileNotFoundError(
+            f"Le fichier {filepath} n'existe pas. "
+            f"Utilisez create_dataset() puis save_dataset() d'abord."
+        )
+
+    df = pd.read_csv(filepath)
+
+    print(f"Dataset chargé depuis {filepath}")
+    print(f"Shape: {df.shape}")
+
+    return df
+
+
+def get_dataset_info(df: pd.DataFrame) -> dict:
+
+    # Déduit la dimension
+    # Colonnes: state_id, c0_real, c0_imag, ..., c{d-1}_real, c{d-1}_imag, norm_squared, is_valid
+    # Nombre de colonnes c{i}_* = 2*dim
+    n_c_columns = len([col for col in df.columns if col.startswith("c")])
+    dim = n_c_columns // 2
+
+    info = {
+        "n_samples": len(df),
+        "n_features": n_c_columns + 1,  # +1 pour norm_squared
+        "dim": dim,
+        "n_valid": (df["is_valid"] == 1).sum(),
+        "n_invalid": (df["is_valid"] == 0).sum(),
+        "balance_ratio": (df["is_valid"] == 1).sum() / (df["is_valid"] == 0).sum(),
+        "norm_stats": df["norm_squared"].describe().to_dict(),
+    }
+
+    return info
+
+
+def print_dataset_info(df: pd.DataFrame):
+
+    info = get_dataset_info(df)
+
+    print("=" * 70)
+    print("INFORMATIONS SUR LE DATASET")
+    print("=" * 70)
+    print(f"\n Taille:")
+    print(f"   Échantillons: {info['n_samples']}")
+    print(f"   Features: {info['n_features']}")
+    print(f"   Dimension: {info['dim']}")
+
+    print(f"\n Distribution des classes:")
+    print(
+        f"   Valides (1): {info['n_valid']} ({info['n_valid']/info['n_samples']*100:.1f}%)"
+    )
+    print(
+        f"   Invalides (0): {info['n_invalid']} ({info['n_invalid']/info['n_samples']*100:.1f}%)"
+    )
+    print(f"   Ratio: {info['balance_ratio']:.3f}")
+
+    if abs(info["balance_ratio"] - 1.0) < 0.05:
+        print(f"    Dataset bien équilibré")
+    else:
+        print(f"     Dataset déséquilibré (idéal: ratio ≈ 1.0)")
+
+    print(f"\n Statistiques de norm_squared:")
+    for key, value in info["norm_stats"].items():
+        print(f"   {key:8s}: {value:.6f}")
+
+    print("=" * 70)
+
+
 if __name__ == "__main__":
-    # Ce bloc s'exécute uniquement si on lance: python src/data_generation.py
+    # Ce bloc s'exécute uniquement si on lance : python src/data_generation.py
 
     print("Test du module data_generation.py\n")
 
@@ -572,22 +646,22 @@ if __name__ == "__main__":
     n_samples = 5
 
     for strategy in ["random", "dirichlet", "basis"]:
-        print(f"\n--- Stratégie: {strategy} ---")
+        print(f"\n--- Stratégie : {strategy} ---")
 
         states = generate_valid_states(
             n_samples=n_samples, dim=dim, strategy=strategy, seed=42
         )
 
-        print(f"Shape: {states.shape}")
-        print(f"Dtype: {states.dtype}")
+        print(f"Forme du tableau : {states.shape}")
+        print(f"Type de données : {states.dtype}")
 
         # Vérification
         all_valid, norms = verify_normalization(states)
-        print(f"Tous normalisés? {all_valid}")
-        print(f"Normes²: {norms}")
+        print(f"Tous les états sont normalisés ? {all_valid}")
+        print(f"Normes au carré : {norms}")
 
         # Affiche les 2 premiers états
-        print(f"\n2 premiers états:")
+        print(f"\n2 premiers états :")
         for i in range(min(2, n_samples)):
-            print(f"  État {i}: {states[i]}")
+            print(f"  État {i} : {states[i]}")
             print(f"    ||ψ||² = {norms[i]:.10f}")
