@@ -401,7 +401,7 @@ def print_invalid_strategy_info():
     print("=" * 70)
 
     for strategy, description in info.items():
-        print(f"\n📌 {strategy.upper()}")
+        print(f"\n {strategy.upper()}")
         print(f"   {description}")
 
     print("\n" + "=" * 70)
