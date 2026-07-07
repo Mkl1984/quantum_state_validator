@@ -183,8 +183,45 @@ def generate_invalid_states(
     scale_range: Tuple[float, float] = (0.1, 2.0),
     noise_level: float = 0.3,
     extreme_prob: float = 0.1,
+    norm_margin: float = 0.05,
     seed: Optional[int] = None,
 ) -> np.ndarray:
+    """
+    Génère des états invalides (non normalisés) selon la stratégie choisie.
+
+    Frontière de classe (correction F2 de l'audit du 2026-07-07)
+    ------------------------------------------------------------
+    Tout état retourné vérifie la GARANTIE : |‖ψ‖² − 1| ≥ norm_margin.
+
+    Lecture : « la valeur absolue de la norme au carré moins un est
+    supérieure ou égale à la marge ».
+
+    Avant cette correction, chaque stratégie avait sa propre notion de
+    « proche de 1 » (scaling excluait k ∈ [0.95, 1.05], noise/direct ne
+    garantissaient que |‖ψ‖² − 1| > 10⁻⁴) : la frontière entre classes
+    n'était pas définie de façon unique. Désormais la définition est
+    centralisée ici : les états valides ont ‖ψ‖² = 1 (à la précision
+    machine), les invalides ont ‖ψ‖² hors de [1 − marge, 1 + marge].
+    La bande interdite matérialise l'ambiguïté physique : un état à
+    ‖ψ‖² = 1.001 est indistinguable d'une erreur d'arrondi.
+
+    Paramètres
+    ----------
+    n_samples   : nombre d'états à générer (> 0).
+    dim         : dimension de l'espace de Hilbert (> 0).
+    strategy    : "scaling" | "noise" | "direct" | "mixed".
+    scale_range : (k_min, k_max) pour la stratégie scaling.
+    noise_level : écart-type du bruit pour la stratégie noise.
+    extreme_prob: proportion de cas extrêmes pour la stratégie mixed.
+    norm_margin : demi-largeur de la bande interdite autour de ‖ψ‖² = 1
+                  (0 < norm_margin < 1). Les états générés dans la bande
+                  sont repoussés à l'extérieur.
+    seed        : graine du générateur pour reproductibilité.
+
+    Retourne
+    --------
+    states : ndarray complexe (n_samples, dim), tous hors de la bande.
+    """
 
     # Validation
     if n_samples <= 0:
@@ -192,6 +229,9 @@ def generate_invalid_states(
 
     if dim <= 0:
         raise ValueError(f"dim doit être > 0, reçu: {dim}")
+
+    if not (0.0 < norm_margin < 1.0):
+        raise ValueError(f"norm_margin doit être dans ]0, 1[, reçu: {norm_margin}")
 
     valid_strategies = ["scaling", "noise", "direct", "mixed"]
     if strategy not in valid_strategies:
@@ -296,6 +336,7 @@ def generate_invalid_states(
                 dim,
                 strategy="scaling",
                 scale_range=scale_range,
+                norm_margin=norm_margin,
                 seed=int(rng.integers(0, int(1e9))),
             )
             states[idx : idx + n_scaling] = states_scaling
@@ -308,6 +349,7 @@ def generate_invalid_states(
                 dim,
                 strategy="noise",
                 noise_level=noise_level,
+                norm_margin=norm_margin,
                 seed=int(rng.integers(0, int(1e9))),
             )
             states[idx : idx + n_noise] = states_noise
@@ -316,25 +358,34 @@ def generate_invalid_states(
         # 4. Direct
         if n_direct > 0:
             states_direct = generate_invalid_states(
-                n_direct, dim, strategy="direct", seed=int(rng.integers(0, int(1e9)))
+                n_direct,
+                dim,
+                strategy="direct",
+                norm_margin=norm_margin,
+                seed=int(rng.integers(0, int(1e9))),
             )
             states[idx : idx + n_direct] = states_direct
 
         # Mélange aléatoirement
         rng.shuffle(states)
 
-    # === VÉRIFICATION FINALE ===
-    # S'assure qu'aucun état n'est accidentellement normalisé
+    # === GARANTIE DE LA FRONTIÈRE DE CLASSE (F2) ===
+    # Repousse hors de la bande interdite [1 − marge, 1 + marge] tout état
+    # dont la norme² serait tombée dedans (possible pour noise/direct).
+    # Vectorisé : pour chaque état fautif on choisit une cible
+    # ‖ψ‖²_cible = 1 ± marge·u avec u ~ U(1, 2) (côté aléatoire), puis on
+    # multiplie l'état par √(cible / ‖ψ‖²) — le scaling d'un vecteur par f
+    # multiplie sa norme² par f².
     norms_squared = np.sum(np.abs(states) ** 2, axis=1)
-    accidentally_normalized = np.isclose(norms_squared, 1.0, atol=1e-4)
+    ambiguous = np.abs(norms_squared - 1.0) < norm_margin
 
-    if accidentally_normalized.any():
-        # Rescale légèrement ces états
-        indices = np.where(accidentally_normalized)[0]
-        for idx in indices:
-            # Multiplie par un facteur aléatoire loin de 1
-            factor = rng.choice([0.7, 0.8, 1.2, 1.3])
-            states[idx] *= factor
+    if ambiguous.any():
+        idx = np.where(ambiguous)[0]
+        u = rng.uniform(1.0, 2.0, size=idx.size)
+        side = rng.choice([-1.0, 1.0], size=idx.size)
+        target = np.clip(1.0 + side * norm_margin * u, 0.01, None)
+        factors = np.sqrt(target / norms_squared[idx])
+        states[idx] *= factors[:, np.newaxis]
 
     return states
 

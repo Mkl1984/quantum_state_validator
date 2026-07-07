@@ -100,3 +100,28 @@ df = load_dataset()
 **Date de création :** 2025-11-12  
 **Auteur :** MklZenin 
 **Projet :** Quantum State Validator
+---
+
+## Définition de la frontière de classe (F2 — audit 2026-07-07)
+
+Depuis la correction F2, la règle de labellisation est **unique et centralisée**
+dans `generate_invalid_states` (paramètre `norm_margin`, défaut 0.05) :
+
+| Classe | Garantie sur ‖ψ‖² = Σᵢ\|cᵢ\|² |
+|---|---|
+| Valide (`is_valid = 1`) | ‖ψ‖² = 1 à la précision machine (~10⁻¹⁵) |
+| Invalide (`is_valid = 0`) | \|‖ψ‖² − 1\| ≥ `norm_margin` (bande interdite) |
+
+**Lecture** : aucun état invalide ne peut se trouver à moins de `norm_margin`
+de la norme unité. La bande interdite ]1 − marge, 1 + marge[ matérialise
+l'ambiguïté physique : un état à ‖ψ‖² = 1.001 est indistinguable d'une erreur
+d'arrondi et n'a donc pas de label défendable.
+
+Historique : avant cette correction, `scaling` excluait k ∈ [0.95, 1.05] mais
+`noise`/`direct` pouvaient produire des états dans cette zone (garantie limitée
+à \|‖ψ‖² − 1\| > 10⁻⁴) — la frontière dépendait de la stratégie de génération.
+Vérifié par `tests/test_data_generation.py::test_invalid_states_respect_norm_margin`.
+
+**Note** : le dataset `quantum_states_10000.csv` a été généré AVANT cette
+correction ; ses invalides « quasi-normalisés » résiduels éventuels datent de
+l'ancienne règle. Régénération prévue au jalon 4.
