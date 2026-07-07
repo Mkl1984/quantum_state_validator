@@ -110,3 +110,41 @@ def test_create_dataset_reproducible():
     a = create_dataset(n_valid=50, n_invalid=50, dim=DIM, seed=99)
     b = create_dataset(n_valid=50, n_invalid=50, dim=DIM, seed=99)
     assert a.equals(b)
+
+
+# ---------------------------------------------------------------------------
+# Dataset multiclasse (jalon 4)
+# ---------------------------------------------------------------------------
+
+
+def test_extreme_strategy_respects_margin():
+    from src.data_generation import generate_invalid_states
+
+    states = generate_invalid_states(500, dim=DIM, strategy="extreme", seed=2)
+    norms_sq = np.sum(np.abs(states) ** 2, axis=1)
+    assert (np.abs(norms_sq - 1.0) >= 0.05 - 1e-12).all()
+
+
+def test_multiclass_dataset_schema_and_labels():
+    from src.data_generation import create_multiclass_dataset
+
+    df = create_multiclass_dataset(n_valid=200, n_per_cause=50, dim=DIM, seed=9)
+    assert len(df) == 200 + 4 * 50
+    counts = df["cause"].value_counts().to_dict()
+    assert counts["valid"] == 200
+    for cause in ("scaling", "noise", "direct", "extreme"):
+        assert counts[cause] == 50
+    # Cohérence cause ↔ is_valid ↔ norme
+    assert ((df["cause"] == "valid") == (df["is_valid"] == 1)).all()
+    valid_norms = df.loc[df.is_valid == 1, "norm_squared"]
+    invalid_norms = df.loc[df.is_valid == 0, "norm_squared"]
+    np.testing.assert_allclose(valid_norms, 1.0, atol=1e-9)
+    assert (np.abs(invalid_norms - 1.0) >= 0.05 - 1e-12).all()
+
+
+def test_multiclass_dataset_reproducible():
+    from src.data_generation import create_multiclass_dataset
+
+    a = create_multiclass_dataset(50, 20, dim=DIM, seed=7)
+    b = create_multiclass_dataset(50, 20, dim=DIM, seed=7)
+    assert a.equals(b)

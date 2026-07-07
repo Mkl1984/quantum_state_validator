@@ -238,7 +238,7 @@ def generate_invalid_states(
     if not (0.0 < norm_margin < 1.0):
         raise ValueError(f"norm_margin doit être dans ]0, 1[, reçu: {norm_margin}")
 
-    valid_strategies = ["scaling", "noise", "direct", "mixed"]
+    valid_strategies = ["scaling", "noise", "direct", "extreme", "mixed"]
     if strategy not in valid_strategies:
         raise ValueError(
             f"strategy '{strategy}' inconnue. " f"Choix possibles: {valid_strategies}"
@@ -312,6 +312,13 @@ def generate_invalid_states(
         # Applique un scaling aléatoire pour varier ||ψ||²
         scale_factors = rng.uniform(0.1, 3.0, size=n_samples)
         states = states * scale_factors[:, np.newaxis]
+
+    # === STRATÉGIE EXTREME ===
+    elif strategy == "extreme":
+        # Cas pathologiques : quasi-nuls, énormes, déséquilibrés.
+        # Exposée comme stratégie de première classe pour le diagnostic
+        # multiclasse de cause d'invalidité (jalon 4).
+        states = _generate_extreme_states(n_samples, dim, rng)
 
     # === STRATÉGIE MIXED ===
     elif strategy == "mixed":
@@ -580,6 +587,100 @@ def create_dataset(
 
     logger.info("=" * 70)
 
+    return df
+
+
+def create_multiclass_dataset(
+    n_valid: int,
+    n_per_cause: int,
+    dim: int,
+    norm_margin: float = 0.05,
+    seed: Optional[int] = None,
+    shuffle: bool = True,
+) -> pd.DataFrame:
+    """
+    Dataset multiclasse : chaque état invalide porte le label de la CAUSE
+    de son invalidité (jalon 4 — diagnostic, pas seulement détection).
+
+    Pourquoi c'est un vrai problème d'apprentissage
+    -----------------------------------------------
+    Contrairement à la validité (fonction déterministe de la norme), la
+    cause n'est PAS calculable depuis les amplitudes : un état de norme
+    1.3 peut provenir d'un scaling (k ≈ 1.14), d'un bruit additif ou d'une
+    génération directe. Les distributions des causes se chevauchent — le
+    classifieur doit exploiter des signatures statistiques fines (profil
+    des composantes, corrélations résiduelles avec un état normalisé).
+    C'est le régime où le ML gagne sa place face au test à seuil.
+
+    Analogie ingénierie : un système FDIR (Fault Detection, Isolation and
+    Recovery) de satellite ne se contente pas de détecter qu'un capteur
+    dévie — il doit isoler la cause (biais de calibration ? bruit anormal ?
+    défaillance franche ?) pour choisir la récupération adaptée.
+
+    Paramètres
+    ----------
+    n_valid     : nombre d'états valides (cause "valid").
+    n_per_cause : nombre d'états PAR cause invalide
+                  ("scaling", "noise", "direct", "extreme").
+    dim         : dimension de l'espace de Hilbert.
+    norm_margin : garantie de frontière F2 (voir generate_invalid_states).
+    seed        : graine de reproductibilité.
+    shuffle     : mélange final du DataFrame.
+
+    Retourne
+    --------
+    DataFrame au schéma standard + colonnes ``cause`` (str) et ``is_valid``.
+    """
+    causes = ["scaling", "noise", "direct", "extreme"]
+    rng = np.random.default_rng(seed)
+
+    blocks = []
+    labels = []
+
+    states_valid = generate_valid_states(
+        n_samples=n_valid,
+        dim=dim,
+        strategy="random",
+        seed=int(rng.integers(0, 1_000_000_000)) if seed is not None else None,
+    )
+    blocks.append(states_valid)
+    labels.extend(["valid"] * n_valid)
+
+    for cause in causes:
+        states_c = generate_invalid_states(
+            n_samples=n_per_cause,
+            dim=dim,
+            strategy=cause,
+            norm_margin=norm_margin,
+            seed=int(rng.integers(0, 1_000_000_000)) if seed is not None else None,
+        )
+        blocks.append(states_c)
+        labels.extend([cause] * n_per_cause)
+
+    all_states = np.vstack(blocks).astype(complex)
+    n_total = len(labels)
+    norms_squared = np.sum(np.abs(all_states) ** 2, axis=1)
+
+    data_dict = {"state_id": np.arange(n_total)}
+    for i in range(dim):
+        data_dict[f"c{i}_real"] = np.real(all_states[:, i])
+        data_dict[f"c{i}_imag"] = np.imag(all_states[:, i])
+    data_dict["norm_squared"] = norms_squared
+    data_dict["cause"] = labels
+    data_dict["is_valid"] = (np.array(labels) == "valid").astype(int)
+
+    df = pd.DataFrame(data_dict)
+
+    if shuffle:
+        df = df.sample(frac=1.0, random_state=seed).reset_index(drop=True)
+        df["state_id"] = np.arange(len(df))
+
+    logger.info(
+        "Dataset multiclasse créé : %d états (%d valides, %d par cause invalide)",
+        n_total,
+        n_valid,
+        n_per_cause,
+    )
     return df
 
 
