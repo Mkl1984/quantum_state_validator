@@ -60,3 +60,33 @@ def test_scaler_fits_on_train_only(xy, tmp_path):
     # Colonnes et index préservés
     assert list(X_val_s.columns) == list(X_val.columns)
     assert (X_val_s.index == X_val.index).all()
+
+
+def test_scale_features_methods(xy):
+    """Q3 : les trois méthodes de scaling sont réelles et distinctes."""
+    from src.preprocessing import scale_features, split_data
+
+    X, y = xy
+    X_tr, X_val, X_te, *_ = split_data(X, y, random_state=0)
+    outs = {}
+    for method in ("standard", "minmax", "robust"):
+        X_tr_s, _, _, scaler = scale_features(
+            X_tr, X_val, X_te, method=method, save_scaler=False
+        )
+        outs[method] = X_tr_s
+        assert (
+            type(scaler)
+            .__name__.lower()
+            .startswith(
+                {"standard": "standard", "minmax": "minmax", "robust": "robust"}[method]
+            )
+        )
+    # minmax borne dans [0, 1]
+    assert outs["minmax"].min().min() >= -1e-12
+    assert outs["minmax"].max().max() <= 1 + 1e-12
+    # les méthodes produisent des résultats différents
+    assert not outs["standard"].equals(outs["robust"])
+    import pytest as _pt
+
+    with _pt.raises(ValueError):
+        scale_features(X_tr, X_val, X_te, method="quantum", save_scaler=False)

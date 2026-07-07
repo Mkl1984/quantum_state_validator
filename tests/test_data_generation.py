@@ -148,3 +148,26 @@ def test_multiclass_dataset_reproducible():
     a = create_multiclass_dataset(50, 20, dim=DIM, seed=7)
     b = create_multiclass_dataset(50, 20, dim=DIM, seed=7)
     assert a.equals(b)
+
+
+def test_verify_normalization_strict_tolerance():
+    """Q6 : critère strictement absolu, sans rtol caché."""
+    states = np.array([[1.0 + 0j, 0j, 0j, 0j]])
+    ok, norms = verify_normalization(states, tolerance=1e-6)
+    assert ok and np.isclose(norms[0], 1.0)
+    # Écart de 2e-5 : l'ancien np.allclose (rtol 1e-5 + atol 1e-6 → 1.1e-5
+    # de marge effective... et il acceptait au-delà du atol annoncé).
+    # Le nouveau critère strict à atol=1e-6 doit REFUSER.
+    bad = states * np.sqrt(1.0 + 2e-5)
+    ok_bad, _ = verify_normalization(bad, tolerance=1e-6)
+    assert not ok_bad
+    # Et accepter si la tolérance annoncée couvre l'écart.
+    ok_wide, _ = verify_normalization(bad, tolerance=1e-4)
+    assert ok_wide
+
+
+def test_basis_strategy_vectorized_correctness():
+    """Q7 : chaque état basis a exactement une composante à 1, les autres à 0."""
+    states = generate_valid_states(200, dim=DIM, strategy="basis", seed=11)
+    assert np.all(np.sum(np.abs(states) > 0, axis=1) == 1)
+    assert np.allclose(np.max(np.abs(states), axis=1), 1.0)

@@ -25,7 +25,35 @@ def generate_valid_states(
     alpha: float = 1.0,
     seed: Optional[int] = None,
 ) -> np.ndarray:
+    """
+    Génère des états quantiques VALIDES (‖ψ‖² = 1 à la précision machine).
 
+    Stratégies
+    ----------
+    - "random"    : cᵢ = xᵢ + i·yᵢ avec x, y ~ N(0, 1), puis division par ‖ψ‖.
+      Lecture : « c i égale x i plus i fois y i, l'état est ensuite divisé
+      par sa norme ». Propriété clé : la mesure gaussienne isotrope induit,
+      après normalisation, la mesure UNIFORME sur la sphère unité complexe
+      (mesure de Haar sur les états purs) — l'échantillonnage le plus
+      « neutre » possible de l'espace des états.
+    - "dirichlet" : probabilités pᵢ ~ Dirichlet(α, …, α) puis cᵢ = √pᵢ·e^{iφᵢ},
+      φᵢ ~ U[0, 2π[. Contrôle de la concentration : α = 1 uniforme sur le
+      simplex, α > 1 états équilibrés, α < 1 états piqués.
+    - "basis"     : états purs de la base canonique |k⟩ (cas triviaux utiles
+      pour borner les features : H = 0, pureté = 1).
+
+    Paramètres
+    ----------
+    n_samples : nombre d'états (> 0).
+    dim       : dimension de l'espace de Hilbert (> 0).
+    strategy  : "random" | "dirichlet" | "basis".
+    alpha     : paramètre de concentration Dirichlet (stratégie dirichlet).
+    seed      : graine de reproductibilité.
+
+    Retourne
+    --------
+    states : ndarray complexe (n_samples, dim), chaque ligne de norme 1.
+    """
     # === Validation des paramètres ===
     if n_samples <= 0:
         raise ValueError(f"n_samples doit être > 0, reçu: {n_samples}")
@@ -89,17 +117,12 @@ def generate_valid_states(
         states = states / norms
 
     elif strategy == "basis":
-        # Stratégie 3 : États purs de la base canonique
-
-        # Si n_samples > dim, on génère plusieurs copies de chaque état
+        # Stratégie 3 : États purs de la base canonique — vectorisé (Q7).
+        # Un indice de base aléatoire par état, puis indexation avancée :
+        # states[n, indices[n]] = 1 pour chaque ligne n en une seule opération.
         states = np.zeros((n_samples, dim), dtype=complex)
-
-        for i in range(n_samples):
-            # Sélectionne un indice de base aléatoirement
-            basis_index = rng.integers(0, dim)
-
-            # Crée l'état pur |basis_index⟩
-            states[i, basis_index] = 1.0 + 0j
+        basis_indices = rng.integers(0, dim, size=n_samples)
+        states[np.arange(n_samples), basis_indices] = 1.0 + 0j
 
     # === Vérification finale (optionnelle, pour debug) ===
     # Décommente pour vérifier que tous les états sont bien normalisés
@@ -112,13 +135,32 @@ def generate_valid_states(
 def verify_normalization(
     states: np.ndarray, tolerance: float = 1e-6
 ) -> Tuple[bool, np.ndarray]:
+    """
+    Vérifie la normalisation : |‖ψ‖² − 1| ≤ tolerance pour chaque état.
 
-    # Calcule ||ψ||² pour chaque état
+    Lecture : « la valeur absolue de la norme au carré moins un est
+    inférieure ou égale à la tolérance ».
+
+    Sémantique de tolérance (correction Q6 de l'audit)
+    --------------------------------------------------
+    Le critère est STRICTEMENT absolu. L'ancienne implémentation utilisait
+    ``np.allclose(..., atol=tolerance)`` dont le ``rtol=1e-5`` par défaut
+    restait actif et s'ADDITIONNAIT à atol (critère effectif :
+    |x − 1| ≤ atol + rtol·|1|). Pour un validateur, la définition du seuil
+    doit être exacte et sans terme caché.
+
+    Paramètres
+    ----------
+    states    : ndarray complexe (n_samples, dim).
+    tolerance : borne absolue sur |‖ψ‖² − 1| (défaut 1e-6, largement
+                au-dessus des erreurs d'arrondi float64 ~ 1e-15 pour d ≤ 100).
+
+    Retourne
+    --------
+    (all_valid, norms_squared) : booléen global + normes² individuelles.
+    """
     norms_squared = np.sum(np.abs(states) ** 2, axis=1)
-
-    # Vérifie si tous sont proches de 1.0
-    all_valid = np.allclose(norms_squared, 1.0, atol=tolerance)
-
+    all_valid = bool(np.all(np.abs(norms_squared - 1.0) <= tolerance))
     return all_valid, norms_squared
 
 
