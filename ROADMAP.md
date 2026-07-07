@@ -28,20 +28,24 @@ EDA avancée (Plotly 3D, simplex), split stratifié 60/20/20, scaling sans fuite
 - Garantie de frontière de classe (`norm_margin`), dataset régénéré (seed=42)
 - 28 tests pytest, CI GitHub Actions, hygiène Git complète, docs open source
 
-### 🔜 Jalon 4 — Là où le ML gagne sa place (v0.4.0)
-Le test à seuil égale le ML tant que le bruit est i.i.d. gaussien. Ce jalon
-introduit les régimes où l'apprentissage apporte une valeur réelle :
+### 🔄 Jalon 4 — Là où le ML gagne sa place (v0.4.0) — EN COURS
 
-- **Bruit corrélé entre composantes** (matrice de covariance non diagonale,
-  analogie : vibrations de porteur sur un interféromètre atomique)
-- **Dérives systématiques de calibration** (biais lentement variable — le
-  test à seuil fixe devient sous-optimal, un modèle peut compenser)
-- **Classification multiclasse de la cause d'invalidité** (scaling / noise /
-  extreme) — diagnostic, pas seulement détection
-- **Dimensions variables** (d ≠ 4) et features indépendantes de d
-- Courbes budget N ↔ taux d'erreur : abaques de dimensionnement type ingénierie
+**4a (fait, notebook 09)** :
+- ✅ Bruit équicorrélé (`add_correlated_noise`) — **résultat négatif assumé** :
+  le test à seuil résiste au mode commun (la somme sur 2d composantes filtre
+  le mode commun). Valeur ingénierie : pas de modèle à embarquer pour ce régime.
+- ✅ Diagnostic multiclasse de la cause (`create_multiclass_dataset`, stratégie
+  `extreme` exposée) — RF à 90 %, mais dominé par la norme ; confusion
+  scaling↔noise (40 %) démontrée comme **limite de Bayes par isotropie**.
 
-Dépendances : `src/features.py` (fait), dataset paramétrable (fait).
+**4b (à faire)** — briser l'isotropie et la stationnarité pour que le ML gagne :
+- Dérives de calibration lentement variables (seuil fixe sous-optimal)
+- Bruit coloré par composante (voies d'acquisition inégales)
+- Causes corrélées à la direction : préparation défaillante d'états cibles
+  *connus* (la référence directionnelle brise l'isotropie)
+- Dimensions variables (d ≠ 4) et features indépendantes de d
+- Abaques budget N ↔ taux d'erreur
+
 Risque principal : garder chaque extension physiquement motivée.
 
 ### 🔮 Jalon 5 — Production et interface (v1.0.0)

@@ -3,6 +3,16 @@
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) ;
 versionnement [SemVer](https://semver.org/lang/fr/).
 
+## [Non publié]
+
+### Ajouté
+- Jalon 4a : `add_correlated_noise` (bruit équicorrélé, mode commun),
+  `create_multiclass_dataset` + stratégie `extreme` exposée
+- Notebook `09_correlated_noise_multiclass.ipynb` (exécuté) : robustesse du
+  test à seuil au mode commun (résultat négatif documenté), diagnostic de
+  cause à 90 %, limite de Bayes scaling↔noise par argument d'isotropie
+- 6 nouveaux tests (structure de corrélation, schéma multiclasse) — total 34
+
 ## [0.3.0] — 2026-07-07
 
 Le jalon de l'honnêteté scientifique. Détails : `reports/AUDIT_2026-07-07.md`
