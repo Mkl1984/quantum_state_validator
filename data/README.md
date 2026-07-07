@@ -122,6 +122,7 @@ Historique : avant cette correction, `scaling` excluait k ∈ [0.95, 1.05] mais
 à \|‖ψ‖² − 1\| > 10⁻⁴) — la frontière dépendait de la stratégie de génération.
 Vérifié par `tests/test_data_generation.py::test_invalid_states_respect_norm_margin`.
 
-**Note** : le dataset `quantum_states_10000.csv` a été généré AVANT cette
-correction ; ses invalides « quasi-normalisés » résiduels éventuels datent de
-l'ancienne règle. Régénération prévue au jalon 4.
+**Note** : le dataset `quantum_states_10000.csv` a été **régénéré le
+2026-07-07 après la correction F2** avec `create_dataset(n_valid=5000,
+n_invalid=5000, dim=4, seed=42)` — reproductible à l'identique. La garantie
+de marge est vérifiée à la génération et par la suite de tests.
