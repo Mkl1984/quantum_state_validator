@@ -434,7 +434,7 @@ git commit -m "docs: Mettre à jour README avec résultats"
 ## Contact
 
 **Auteur** : Mklzenin  
-Étudiant MSc Ai & ML/DL
+Étudiant ingénieur Aérospatial (spécialité AI and cybersécurity)
 
 **GitHub** : https://github.com/Mkl1984/quantum_state_validator
 
@@ -446,7 +446,7 @@ Pour questions ou suggestions :
 
 ## Licence
 
-Ce projet est développé dans un cadre pédagogique.
+Fruit d'une curiosité personnelle pour l'univers quantique, ce projet a évolué vers un véritable support d'apprentissage. Son objectif est d'offrir une interface claire et intuitive pour s'initier aux principes de base de la mécanique quantique, sans sacrifier la précision du propos.
 
 **MIT License**
 
