@@ -1,0 +1,21 @@
+# Normalisation des fins de ligne (voir reports/AUDIT_2026-07-07.md §2.3)
+* text=auto
+
+# Code et texte : LF dans le dépôt
+*.py    text eol=lf
+*.pyi   text eol=lf
+*.ipynb text eol=lf
+*.md    text eol=lf
+*.txt   text eol=lf
+*.csv   text eol=lf
+*.tex   text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+
+# Binaires : jamais de conversion
+*.joblib binary
+*.pkl    binary
+*.h5     binary
+*.png    binary
+*.pdf    binary
+*.docx   binary
