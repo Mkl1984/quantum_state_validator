@@ -7,10 +7,15 @@ Date: 2024-11-12
 Ce module contient les fonctions pour créer des datasets d'états quantiques avec différentes stratégies de génération.
 """
 
-import numpy as np
-from typing import Tuple, Optional
+import logging
 import warnings
 from pathlib import Path
+from typing import Optional, Tuple
+
+import numpy as np
+import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 
 def generate_valid_states(
@@ -158,15 +163,15 @@ def print_strategy_info():
     """
     info = get_strategy_info()
 
-    print("=" * 70)
-    print("STRATÉGIES DE GÉNÉRATION D'ÉTATS VALIDES")
-    print("=" * 70)
+    logger.info("=" * 70)
+    logger.info("STRATÉGIES DE GÉNÉRATION D'ÉTATS VALIDES")
+    logger.info("=" * 70)
 
     for strategy, description in info.items():
-        print(f"\n {strategy.upper()}")
-        print(f"   {description}")
+        logger.info(f"\n {strategy.upper()}")
+        logger.info(f"   {description}")
 
-    print("\n" + "=" * 70)
+    logger.info("\n" + "=" * 70)
 
 
 # === Exemple d'utilisation (si le script est exécuté directement) ===
@@ -447,22 +452,20 @@ def print_invalid_strategy_info():
 
     info = get_invalid_strategy_info()
 
-    print("=" * 70)
-    print("STRATÉGIES DE GÉNÉRATION D'ÉTATS INVALIDES")
-    print("=" * 70)
+    logger.info("=" * 70)
+    logger.info("STRATÉGIES DE GÉNÉRATION D'ÉTATS INVALIDES")
+    logger.info("=" * 70)
 
     for strategy, description in info.items():
-        print(f"\n {strategy.upper()}")
-        print(f"   {description}")
+        logger.info(f"\n {strategy.upper()}")
+        logger.info(f"   {description}")
 
-    print("\n" + "=" * 70)
+    logger.info("\n" + "=" * 70)
 
 
 # ============================================================================
 # CRÉATION DU DATASET COMPLET
 # ============================================================================
-
-import pandas as pd
 
 
 def create_dataset(
@@ -486,7 +489,7 @@ def create_dataset(
     seed_invalid = int(rng.integers(0, 1_000_000_000)) if seed is not None else None
 
     # === GÉNÉRATION DES ÉTATS VALIDES ===
-    print(f"Génération de {n_valid} états valides (stratégie: {valid_strategy})...")
+    logger.info(f"Génération de {n_valid} états valides (stratégie: {valid_strategy})...")
 
     valid_kwargs = valid_kwargs or {}
     states_valid = generate_valid_states(
@@ -498,7 +501,7 @@ def create_dataset(
     )
 
     # === GÉNÉRATION DES ÉTATS INVALIDES ===
-    print(
+    logger.info(
         f"Génération de {n_invalid} états invalides (stratégie: {invalid_strategy})..."
     )
 
@@ -512,7 +515,7 @@ def create_dataset(
     )
 
     # === CONSTRUCTION DU DATAFRAME ===
-    print("Construction du DataFrame...")
+    logger.info("Construction du DataFrame...")
 
     # Combine les deux ensembles
     all_states = np.vstack([states_valid, states_invalid])
@@ -554,26 +557,26 @@ def create_dataset(
 
     # === MÉLANGE (SHUFFLE) ===
     if shuffle:
-        print("Mélange du dataset...")
+        logger.info("Mélange du dataset...")
         df = df.sample(frac=1.0, random_state=seed).reset_index(drop=True)
         # Réattribue les state_id après shuffle
         df["state_id"] = np.arange(len(df))
 
     # === STATISTIQUES ===
-    print("\n" + "=" * 70)
-    print("DATASET CRÉÉ")
-    print("=" * 70)
-    print(f"Shape: {df.shape}")
-    print(f"Dimension: {dim}")
-    print(f"États valides: {n_valid} ({n_valid/n_total*100:.1f}%)")
-    print(f"États invalides: {n_invalid} ({n_invalid/n_total*100:.1f}%)")
-    print(f"\n Distribution de is_valid:")
-    print(df["is_valid"].value_counts().sort_index())
+    logger.info("\n" + "=" * 70)
+    logger.info("DATASET CRÉÉ")
+    logger.info("=" * 70)
+    logger.info(f"Shape: {df.shape}")
+    logger.info(f"Dimension: {dim}")
+    logger.info(f"États valides: {n_valid} ({n_valid/n_total*100:.1f}%)")
+    logger.info(f"États invalides: {n_invalid} ({n_invalid/n_total*100:.1f}%)")
+    logger.info(f"\n Distribution de is_valid:")
+    logger.info(df["is_valid"].value_counts().sort_index())
 
-    print(f"\n Statistiques de norm_squared:")
-    print(df["norm_squared"].describe())
+    logger.info(f"\n Statistiques de norm_squared:")
+    logger.info(df["norm_squared"].describe())
 
-    print("=" * 70)
+    logger.info("=" * 70)
 
     return df
 
@@ -597,11 +600,11 @@ def save_dataset(
     # Taille du fichier
     file_size = filepath.stat().st_size / 1024  # en KB
 
-    print(f"\n Dataset sauvegardé:")
-    print(f"   Chemin: {filepath}")
-    print(f"   Taille: {file_size:.2f} KB")
-    print(f"   Lignes: {len(df)}")
-    print(f"   Colonnes: {len(df.columns)}")
+    logger.info(f"\n Dataset sauvegardé:")
+    logger.info(f"   Chemin: {filepath}")
+    logger.info(f"   Taille: {file_size:.2f} KB")
+    logger.info(f"   Lignes: {len(df)}")
+    logger.info(f"   Colonnes: {len(df.columns)}")
 
     return filepath
 
@@ -620,8 +623,8 @@ def load_dataset(
 
     df = pd.read_csv(filepath)
 
-    print(f"Dataset chargé depuis {filepath}")
-    print(f"Shape: {df.shape}")
+    logger.info(f"Dataset chargé depuis {filepath}")
+    logger.info(f"Shape: {df.shape}")
 
     return df
 
@@ -651,68 +654,69 @@ def print_dataset_info(df: pd.DataFrame):
 
     info = get_dataset_info(df)
 
-    print("=" * 70)
-    print("INFORMATIONS SUR LE DATASET")
-    print("=" * 70)
-    print(f"\n Taille:")
-    print(f"   Échantillons: {info['n_samples']}")
-    print(f"   Features: {info['n_features']}")
-    print(f"   Dimension: {info['dim']}")
+    logger.info("=" * 70)
+    logger.info("INFORMATIONS SUR LE DATASET")
+    logger.info("=" * 70)
+    logger.info(f"\n Taille:")
+    logger.info(f"   Échantillons: {info['n_samples']}")
+    logger.info(f"   Features: {info['n_features']}")
+    logger.info(f"   Dimension: {info['dim']}")
 
-    print(f"\n Distribution des classes:")
-    print(
+    logger.info(f"\n Distribution des classes:")
+    logger.info(
         f"   Valides (1): {info['n_valid']} ({info['n_valid']/info['n_samples']*100:.1f}%)"
     )
-    print(
+    logger.info(
         f"   Invalides (0): {info['n_invalid']} ({info['n_invalid']/info['n_samples']*100:.1f}%)"
     )
-    print(f"   Ratio: {info['balance_ratio']:.3f}")
+    logger.info(f"   Ratio: {info['balance_ratio']:.3f}")
 
     if abs(info["balance_ratio"] - 1.0) < 0.05:
-        print(f"    Dataset bien équilibré")
+        logger.info(f"    Dataset bien équilibré")
     else:
-        print(f"     Dataset déséquilibré (idéal: ratio ≈ 1.0)")
+        logger.info(f"     Dataset déséquilibré (idéal: ratio ≈ 1.0)")
 
-    print(f"\n Statistiques de norm_squared:")
+    logger.info(f"\n Statistiques de norm_squared:")
     for key, value in info["norm_stats"].items():
-        print(f"   {key:8s}: {value:.6f}")
+        logger.info(f"   {key:8s}: {value:.6f}")
 
-    print("=" * 70)
+    logger.info("=" * 70)
 
 
 if __name__ == "__main__":
     # Ce bloc s'exécute uniquement si on lance : python src/data_generation.py
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
 
-    print("Test du module data_generation.py\n")
+    logger.info("Test du module data_generation.py\n")
 
     # Affiche les stratégies disponibles
     print_strategy_info()
 
     # Test des 3 stratégies
-    print("\n" + "=" * 70)
-    print("TESTS DE GÉNÉRATION")
-    print("=" * 70)
+    logger.info("\n" + "=" * 70)
+    logger.info("TESTS DE GÉNÉRATION")
+    logger.info("=" * 70)
 
     dim = 3
     n_samples = 5
 
     for strategy in ["random", "dirichlet", "basis"]:
-        print(f"\n--- Stratégie : {strategy} ---")
+        logger.info(f"\n--- Stratégie : {strategy} ---")
 
         states = generate_valid_states(
             n_samples=n_samples, dim=dim, strategy=strategy, seed=42
         )
 
-        print(f"Forme du tableau : {states.shape}")
-        print(f"Type de données : {states.dtype}")
+        logger.info(f"Forme du tableau : {states.shape}")
+        logger.info(f"Type de données : {states.dtype}")
 
         # Vérification
         all_valid, norms = verify_normalization(states)
-        print(f"Tous les états sont normalisés ? {all_valid}")
-        print(f"Normes au carré : {norms}")
+        logger.info(f"Tous les états sont normalisés ? {all_valid}")
+        logger.info(f"Normes au carré : {norms}")
 
         # Affiche les 2 premiers états
-        print(f"\n2 premiers états :")
+        logger.info(f"\n2 premiers états :")
         for i in range(min(2, n_samples)):
-            print(f"  État {i} : {states[i]}")
-            print(f"    ||ψ||² = {norms[i]:.10f}")
+            logger.info(f"  État {i} : {states[i]}")
+            logger.info(f"    ||ψ||² = {norms[i]:.10f}")

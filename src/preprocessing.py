@@ -5,13 +5,17 @@ Auteur: Mkl Zenin
 Date: 2024-11-17
 """
 
+import logging
+from pathlib import Path
+from typing import List, Optional, Tuple
+
+import joblib
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from typing import Tuple, Optional, List
-import joblib
-from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 def prepare_features_and_target(
@@ -75,10 +79,10 @@ def split_data(
         random_state=random_state,
     )
 
-    print(f"Split effectué:")
-    print(f"  Train: {len(X_train)} ({len(X_train)/len(X)*100:.1f}%)")
-    print(f"  Val:   {len(X_val)} ({len(X_val)/len(X)*100:.1f}%)")
-    print(f"  Test:  {len(X_test)} ({len(X_test)/len(X)*100:.1f}%)")
+    logger.info(f"Split effectué:")
+    logger.info(f"  Train: {len(X_train)} ({len(X_train)/len(X)*100:.1f}%)")
+    logger.info(f"  Val:   {len(X_val)} ({len(X_val)/len(X)*100:.1f}%)")
+    logger.info(f"  Test:  {len(X_test)} ({len(X_test)/len(X)*100:.1f}%)")
 
     return X_train, X_val, X_test, y_train, y_val, y_test
 
@@ -113,8 +117,8 @@ def scale_features(
         scaler.transform(X_test), columns=X_test.columns, index=X_test.index
     )
 
-    print(f"Normalisation effectuée ({method})")
-    print(
+    logger.info(f"Normalisation effectuée ({method})")
+    logger.info(
         f"  Train - μ: {X_train_scaled.mean().mean():.6f}, σ: {X_train_scaled.std().mean():.6f}"
     )
 
@@ -122,14 +126,15 @@ def scale_features(
         scaler_file = Path(scaler_path)
         scaler_file.parent.mkdir(parents=True, exist_ok=True)
         joblib.dump(scaler, scaler_file)
-        print(f"  Scaler sauvegardé: {scaler_file}")
+        logger.info(f"  Scaler sauvegardé: {scaler_file}")
 
     return X_train_scaled, X_val_scaled, X_test_scaled, scaler
 
 
 # Test si exécuté directement
 if __name__ == "__main__":
-    print("Test du module preprocessing.py")
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+    logger.info("Test du module preprocessing.py")
 
     # Import du module de génération
     from data_generation import load_dataset
@@ -139,10 +144,10 @@ if __name__ == "__main__":
 
     # Test
     X, y = prepare_features_and_target(df, include_norm_squared=False)
-    print(f"\nFeatures: {X.shape}")
+    logger.info(f"\nFeatures: {X.shape}")
 
     X_train, X_val, X_test, y_train, y_val, y_test = split_data(X, y)
 
     X_train_sc, X_val_sc, X_test_sc, scaler = scale_features(X_train, X_val, X_test)
 
-    print("\n Module preprocessing fonctionnel!")
+    logger.info("\n Module preprocessing fonctionnel!")
