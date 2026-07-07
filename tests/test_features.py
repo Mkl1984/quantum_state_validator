@@ -160,3 +160,43 @@ def test_noise_shrinks_with_budget(small_dataset):
         noisy = add_measurement_noise(small_dataset, n_shots=n, seed=1)
         err[n] = np.abs(noisy["norm_squared"].to_numpy() - base).mean()
     assert err[10_000] < err[100] / 3  # ~×10 attendu, ×3 avec marge large
+
+
+# ---------------------------------------------------------------------------
+# Bruit corrélé (jalon 4)
+# ---------------------------------------------------------------------------
+
+
+def test_correlated_noise_structure(small_dataset):
+    """Corr(εᵢ, εⱼ) ≈ ρ hors diagonale, Var(εᵢ) ≈ σ² inchangée."""
+    from src.features import add_correlated_noise
+
+    rho, n_shots = 0.8, 50
+    noisy = add_correlated_noise(small_dataset, n_shots=n_shots, rho=rho, seed=3)
+    real_cols = [f"c{i}_real" for i in range(4)]
+    eps = noisy[real_cols].to_numpy() - small_dataset[real_cols].to_numpy()
+    corr = np.corrcoef(eps.T)
+    off_diag = corr[np.triu_indices(4, 1)]
+    assert np.abs(off_diag.mean() - rho) < 0.1
+    sigma = sigma_from_shots(n_shots)
+    assert np.abs(eps.std() - sigma) / sigma < 0.15
+
+
+def test_correlated_noise_rho_zero_is_iid(small_dataset):
+    """ρ = 0 : corrélation hors diagonale ≈ 0 (équivalent i.i.d.)."""
+    from src.features import add_correlated_noise
+
+    noisy = add_correlated_noise(small_dataset, n_shots=100, rho=0.0, seed=3)
+    real_cols = [f"c{i}_real" for i in range(4)]
+    eps = noisy[real_cols].to_numpy() - small_dataset[real_cols].to_numpy()
+    corr = np.corrcoef(eps.T)
+    assert np.abs(corr[np.triu_indices(4, 1)]).max() < 0.15
+
+
+def test_correlated_noise_validation(small_dataset):
+    from src.features import add_correlated_noise
+
+    with pytest.raises(ValueError):
+        add_correlated_noise(small_dataset, rho=1.0)
+    with pytest.raises(ValueError):
+        add_correlated_noise(small_dataset, rho=-0.1)

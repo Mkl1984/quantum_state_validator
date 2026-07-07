@@ -56,6 +56,7 @@ __all__ = [
     "scale_invariant_features",
     "compute_features",
     "add_measurement_noise",
+    "add_correlated_noise",
     "sigma_from_shots",
 ]
 
@@ -308,6 +309,86 @@ def add_measurement_noise(
 
     noise = rng.normal(0.0, sigma, size=(len(df), len(amp_cols)))
     out[amp_cols] = df[amp_cols].to_numpy() + noise
+
+    if "norm_squared" in out.columns:
+        out["norm_squared"] = norm_squared(extract_amplitudes(out))
+    return out
+
+
+def add_correlated_noise(
+    df: pd.DataFrame,
+    n_shots: int = 1000,
+    rho: float = 0.5,
+    seed: Optional[int] = None,
+) -> pd.DataFrame:
+    """
+    Bruit de mesure ÉQUICORRÉLÉ entre composantes : un mode commun par état
+    (jalon 4 — le régime où la statistique « norme estimée » cesse d'être
+    complète, et où l'apprentissage peut gagner sa place).
+
+    Modèle
+    ------
+    Pour chaque état, chaque partie (réelle et imaginaire séparément) :
+
+        εᵢ = σ·(√ρ · z + √(1−ρ) · wᵢ),   z ~ N(0,1) commun,  wᵢ ~ N(0,1) i.i.d.
+
+    Lecture : « epsilon i égale sigma fois racine de rho fois z, plus racine
+    de un moins rho fois w i » — z est le mode commun partagé par toutes les
+    composantes de l'état, wᵢ le bruit propre à chaque composante.
+
+    Propriétés (vérifiées par les tests) :
+    - Var(εᵢ) = σ² quel que soit ρ : à budget N fixé, le bruit par composante
+      est identique au cas i.i.d. — seule la STRUCTURE change ;
+    - Corr(εᵢ, εⱼ) = ρ pour i ≠ j.
+
+    Physique du mode commun
+    -----------------------
+    Dans un instrument réel, une partie du bruit est partagée par toutes les
+    voies de mesure : vibration du porteur sur un interféromètre atomique,
+    fluctuation d'intensité du laser de lecture, dérive thermique de la
+    chaîne d'acquisition. Le bruit i.i.d. du notebook 08 est l'idéalisation ;
+    le mode commun est la réalité embarquée. Conséquence statistique : le
+    bruit sur ‖ψ̂‖² devient hétéroscédastique — sa variance dépend de l'état
+    (du terme (Σᵢcᵢ)², couplage signal-mode commun), ce qu'un seuil global
+    ne peut pas exploiter mais qu'un modèle disposant des coordonnées peut
+    apprendre.
+
+    Paramètres
+    ----------
+    df      : dataset au schéma standard.
+    n_shots : budget de mesures N (σ = 1/(2√N)).
+    rho     : corrélation entre composantes, 0 ≤ rho < 1 (0 = i.i.d.,
+              équivalent à add_measurement_noise).
+    seed    : graine de reproductibilité.
+
+    Retourne
+    --------
+    Copie bruitée de ``df`` (mêmes conventions que add_measurement_noise :
+    label conservé, norm_squared recalculée).
+    """
+    if not (0.0 <= rho < 1.0):
+        raise ValueError(f"rho doit être dans [0, 1[, reçu: {rho}")
+    sigma = sigma_from_shots(n_shots)
+    rng = np.random.default_rng(seed)
+    out = df.copy()
+
+    real_cols = sorted(
+        (c for c in df.columns if c.startswith("c") and c.endswith("_real")),
+        key=lambda c: int(c[1:-5]),
+    )
+    imag_cols = sorted(
+        (c for c in df.columns if c.startswith("c") and c.endswith("_imag")),
+        key=lambda c: int(c[1:-5]),
+    )
+    if not real_cols:
+        raise ValueError("Aucune colonne d'amplitude c{i}_real / c{i}_imag trouvée.")
+
+    n, d = len(df), len(real_cols)
+    for cols in (real_cols, imag_cols):
+        z = rng.normal(0.0, 1.0, size=(n, 1))  # mode commun par état
+        w = rng.normal(0.0, 1.0, size=(n, d))  # bruit propre
+        eps = sigma * (np.sqrt(rho) * z + np.sqrt(1.0 - rho) * w)
+        out[cols] = df[cols].to_numpy() + eps
 
     if "norm_squared" in out.columns:
         out["norm_squared"] = norm_squared(extract_amplitudes(out))
