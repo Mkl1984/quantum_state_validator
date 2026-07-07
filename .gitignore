@@ -39,7 +39,7 @@ wheels/
 data/raw/*.csv
 data/raw/*.xlsx
 data/processed/*.csv
-!data/processed/quantum_states_10k.csv
+!data/processed/quantum_states_10000.csv
 *.h5
 *.hdf5
 
@@ -51,7 +51,6 @@ data/processed/*.csv
 *Décryptage*.docx
 *Quiz*.docx
 Module_data_generation_def.docx
-00_smoke_test.ipynb
 
 # ============================================================================
 # IDE / EDITORS
@@ -92,3 +91,15 @@ desktop.ini
 .DS_Store
 Décryptage des Fonctions de Validation d'États Quantiques.pdf
 Décryptage des Fonctions de Validation d'États Quantiques.tex
+
+# ============================================================================
+# ARTEFACTS DE NOTEBOOKS (exécutés avec le mauvais cwd — voir audit A1)
+# ============================================================================
+notebooks/data/
+notebooks/models/
+
+# ============================================================================
+# DIVERS
+# ============================================================================
+~$*
+.claude/
