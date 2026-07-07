@@ -32,6 +32,11 @@ python-dotenv>=1.0.0   # Gestion variables d'environnement
 black>=23.0.0          # Formatage automatique du code
 pylint>=2.17.0         # Analyse statique (qualité du code)
 
+# ----- Serialization -----
+joblib>=1.3.0          # Sauvegarde modèles/scalers (importé par preprocessing.py)
+
+# ----- Testing -----
+pytest>=7.4.0          # Tests unitaires (tests/)
+
 # ----- Optional (pour plus tard) -----
-# joblib>=1.3.0        # Sauvegarde modèles efficace
 # pyyaml>=6.0          # Lecture fichiers config YAML
