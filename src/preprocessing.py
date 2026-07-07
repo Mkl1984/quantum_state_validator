@@ -1,7 +1,7 @@
 """
 Module: preprocessing.py
 Objectif: Préparation des données pour ML
-Auteur: Mandem
+Auteur: Mkl Zenin
 Date: 2024-11-17
 """
 
