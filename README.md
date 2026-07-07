@@ -6,7 +6,7 @@
 
 ## Description
 
-Ce projet implémente un pipeline complet de Machine Learning pour classifier automatiquement la validité d'états quantiques discrets, en combinant les principes de la mécanique quantique avec des techniques modernes d'apprentissage automatique.
+Ce projet implémente un pipeline complet de Machine Learning pour classifier automatiquement la validité d'états quantiques discrets, en combinant les principes de la mécanique quantique avec des techniques d'apprentissage automatique.
 
 ### Problématique Physique
 
