@@ -489,7 +489,9 @@ def create_dataset(
     seed_invalid = int(rng.integers(0, 1_000_000_000)) if seed is not None else None
 
     # === GÉNÉRATION DES ÉTATS VALIDES ===
-    logger.info(f"Génération de {n_valid} états valides (stratégie: {valid_strategy})...")
+    logger.info(
+        f"Génération de {n_valid} états valides (stratégie: {valid_strategy})..."
+    )
 
     valid_kwargs = valid_kwargs or {}
     states_valid = generate_valid_states(

@@ -44,7 +44,10 @@ def test_scaler_fits_on_train_only(xy, tmp_path):
     X, y = xy
     X_tr, X_val, X_te, *_ = split_data(X, y, random_state=0)
     X_tr_s, X_val_s, X_te_s, scaler = scale_features(
-        X_tr, X_val, X_te, save_scaler=True,
+        X_tr,
+        X_val,
+        X_te,
+        save_scaler=True,
         scaler_path=str(tmp_path / "scaler.joblib"),
     )
     # Train standardisé : moyenne ≈ 0, écart-type ≈ 1

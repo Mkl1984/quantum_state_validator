@@ -23,9 +23,7 @@ from src.features import (
 
 @pytest.fixture()
 def small_dataset() -> pd.DataFrame:
-    return create_dataset(
-        n_valid=200, n_invalid=200, dim=4, seed=42, shuffle=True
-    )
+    return create_dataset(n_valid=200, n_invalid=200, dim=4, seed=42, shuffle=True)
 
 
 # ---------------------------------------------------------------------------
