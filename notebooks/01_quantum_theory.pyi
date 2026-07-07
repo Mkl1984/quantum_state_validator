@@ -235,7 +235,7 @@ def normalize_state(state: QuantumState) -> QuantumState:
 
     Attention
     ---------
-    ⚠️  Cette fonction ne vérifie PAS que l'état normalisé est physiquement
+      Cette fonction ne vérifie PAS que l'état normalisé est physiquement
         valide (ex: pas de contraintes sur la cohérence de phase).
         Elle garantit seulement ||ψ||² = 1.
 
@@ -289,7 +289,7 @@ def visualize_probabilities(
        - Format : 4 décimales pour la précision
 
     4. **Titre informatif** :
-       - Statut : ✅ NORMALISÉ ou ❌ NON NORMALISÉ
+       - Statut : NORMALISÉ ou NON NORMALISÉ
        - Valeur de la somme Σ|cᵢ|² avec 6 décimales
 
     Paramètres
@@ -306,7 +306,7 @@ def visualize_probabilities(
 
         - Le statut de normalisation sera automatiquement ajouté
         - Exemple de titre final :
-          "Probabilités de mesure\n✅ NORMALISÉ (Σ|cᵢ|² = 1.000000)"
+          "Probabilités de mesure\n NORMALISÉ (Σ|cᵢ|² = 1.000000)"
 
     Retourne
     --------
@@ -364,7 +364,7 @@ def visualize_probabilities(
     >>> state_inv = np.array([0.5, 0.5])
     >>> visualize_probabilities(state_inv, "État non normalisé")
     # Affiche 2 barres ROUGES de hauteur 0.25 chacune
-    # Titre indiquera "❌ NON NORMALISÉ (Σ|cᵢ|² = 0.500000)"
+    # Titre indiquera " NON NORMALISÉ (Σ|cᵢ|² = 0.500000)"
     >>>
     >>> # État complexe sur 3 dimensions
     >>> state_3d = np.array([0.6, 0.65, 0.46])
