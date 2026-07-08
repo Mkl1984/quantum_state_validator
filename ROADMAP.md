@@ -38,8 +38,15 @@ EDA avancée (Plotly 3D, simplex), split stratifié 60/20/20, scaling sans fuite
   `extreme` exposée) — RF à 90 %, mais dominé par la norme ; confusion
   scaling↔noise (40 %) démontrée comme **limite de Bayes par isotropie**.
 
-**4b (à faire)** — briser l'isotropie et la stationnarité pour que le ML gagne :
-- Dérives de calibration lentement variables (seuil fixe sous-optimal)
+**4b (fait, notebook 10)** :
+- ✅ Dérive de calibration g(t) = A·sin(2πt/T) (`add_calibration_drift`) —
+  le seuil fixe s'effondre (0.972→0.937) ; recalibration en ligne 0.964 ;
+  GBM sur (norme, temps) seuls 0.962 (le ML apprend la carte de calibration
+  SI la représentation est bonne) ; **hybride physique+ML vainqueur (0.967)**.
+  Le jalon 4 a répondu à sa question : le ML gagne sa place en régime non
+  stationnaire, marié à la structure physique.
+
+**4c (reste)** :
 - Bruit coloré par composante (voies d'acquisition inégales)
 - Causes corrélées à la direction : préparation défaillante d'états cibles
   *connus* (la référence directionnelle brise l'isotropie)
@@ -57,13 +64,12 @@ Risque principal : garder chaque extension physiquement motivée.
 
 ## Dette technique (traquée, non bloquante)
 
+**Purge du 2026-07-07** : Q3 (method réel : standard/minmax/robust), Q6
+(tolérance strictement absolue), Q7 (basis vectorisé), A3 (main.tex →
+reports/), A4 (docstrings restaurées), A1/A2 (notebooks 04/06 rebranchés
+sur src/paths et ré-exécutés — le 04 reproduit le CSV octet pour octet),
+dossier annexes renommé. Il reste :
+
 | Item | Origine audit | Effort |
 |---|---|---|
-| Paramètre `method` inutilisé dans `scale_features` | Q3 | 30 min |
-| Sémantique de tolérance de `verify_normalization` (rtol implicite) | Q6 | 30 min |
-| Vectorisation stratégie `basis` | Q7 | 15 min |
-| `main.tex` → `reports/`, dossiers vides (`configs/`, `figures/`) | A3 | 15 min |
-| Salvage des docstrings des `.pyi` supprimés vers les `.py` | A4 | 1-2 h |
-| Notebooks 04/06 : chemins via `src/paths.py` + ré-exécution | A1 | 1-2 h |
-| Renommage `Fichiers annexes/` (espaces + accents) | — | 15 min |
 | Parquet si dataset > 10⁶ lignes | — | si besoin |

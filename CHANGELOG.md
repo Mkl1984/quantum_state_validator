@@ -6,6 +6,11 @@ versionnement [SemVer](https://semver.org/lang/fr/).
 ## [Non publié]
 
 ### Ajouté
+- Jalon 4b : `add_calibration_drift` (dérive de gain sinusoïdale) et
+  notebook 10 (exécuté) : effondrement du seuil fixe, recalibration en
+  ligne, apprentissage de la carte de calibration, victoire de l'hybride
+  physique+ML
+- Q3 : `scale_features` accepte réellement standard/minmax/robust
 - Jalon 4a : `add_correlated_noise` (bruit équicorrélé, mode commun),
   `create_multiclass_dataset` + stratégie `extreme` exposée
 - Notebook `09_correlated_noise_multiclass.ipynb` (exécuté) : robustesse du
@@ -28,6 +33,13 @@ et rapports de session Phase 0/1/2.
 - CI GitHub Actions : black + pytest sur Python 3.10 / 3.12
 - LICENSE (MIT), CONTRIBUTING.md, ROADMAP.md, templates issues/PR
 - `.gitattributes` (normalisation LF) ; dataset 10k versionné et reproductible
+
+### Modifié (dette purgée)
+- Q6 : `verify_normalization` à critère strictement absolu (rtol caché supprimé)
+- Q7 : stratégie `basis` vectorisée
+- A1/A2 : notebooks 04/06 rebranchés sur `src/paths`, ré-exécutés (le 04
+  reproduit le dataset versionné octet pour octet)
+- A3 : `main.tex` déplacé vers `reports/`
 
 ### Modifié
 - `generate_invalid_states` : garantie de frontière de classe unique
