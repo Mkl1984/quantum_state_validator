@@ -46,14 +46,34 @@ EDA avancée (Plotly 3D, simplex), split stratifié 60/20/20, scaling sans fuite
   Le jalon 4 a répondu à sa question : le ML gagne sa place en régime non
   stationnaire, marié à la structure physique.
 
-**4c (reste)** :
-- Bruit coloré par composante (voies d'acquisition inégales)
-- Causes corrélées à la direction : préparation défaillante d'états cibles
-  *connus* (la référence directionnelle brise l'isotropie)
+**4c (fait, notebook 11)** :
+- ✅ Préparation d'états cibles *connus* (`src/preparation.py`, en anglais) —
+  la référence directionnelle brise la limite d'isotropie du nb 09 :
+  `rotated` diagnostiqué à 100 % (vs 59 % de rappel sans référence).
+  Chaque statistique seule plafonne à 0.667 (aveugle à une classe) ; la
+  paire (norme, fidélité) atteint 0.92 avec un arbre de profondeur 3 et
+  bat le RF sur amplitudes brutes — 4e leçon « représentation > algorithme ».
+
+**4d (reste)** :
 - Dimensions variables (d ≠ 4) et features indépendantes de d
-- Abaques budget N ↔ taux d'erreur
+- Abaques budget N ↔ taux d'erreur (courbes de dimensionnement)
+- (optionnel) bruit coloré par composante
 
 Risque principal : garder chaque extension physiquement motivée.
+
+## Conventions du projet (directives du 2026-07-07)
+
+- **Langue : anglais partout** — code, commentaires, figures, documentation.
+  Le nouveau code est en anglais ; la traduction de l'existant (docstrings
+  et notebooks en français) fait partie de la phase finale de mise en forme.
+- **Notebooks de code : sobres** — implémentation et commentaires courts ;
+  la documentation détaillée vit dans le notebook final de projet.
+- **Phase finale (après les jalons)** : notebook de documentation complet
+  (présentation, théorie, choix méthodologiques, architecture, résultats,
+  conclusion) incluant un retour d'expérience à la première personne sur
+  les erreurs réellement rencontrées (matière première : reports/ et
+  l'historique Git — rien d'inventé) ; traduction intégrale en anglais ;
+  pas d'emoji ; style naturel sans sur-ingénierie.
 
 ### 🔮 Jalon 5 — Production et interface (v1.0.0)
 - API de prédiction (FastAPI) + modèle exporté

@@ -6,6 +6,10 @@ versionnement [SemVer](https://semver.org/lang/fr/).
 ## [Non publié]
 
 ### Ajouté
+- Jalon 4c : `src/preparation.py` (QA de préparation contre cibles connues,
+  rédigé en anglais) et notebook 11 (exécuté, en anglais) : la référence
+  directionnelle brise la limite d'isotropie du nb 09 ; statistique double
+  (norme, fidélité) à 0.92 là où chacune plafonne à 0.667
 - Jalon 4b : `add_calibration_drift` (dérive de gain sinusoïdale) et
   notebook 10 (exécuté) : effondrement du seuil fixe, recalibration en
   ligne, apprentissage de la carte de calibration, victoire de l'hybride
