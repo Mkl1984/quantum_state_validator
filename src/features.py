@@ -57,6 +57,7 @@ __all__ = [
     "compute_features",
     "add_measurement_noise",
     "add_correlated_noise",
+    "add_calibration_drift",
     "sigma_from_shots",
 ]
 
@@ -389,6 +390,91 @@ def add_correlated_noise(
         w = rng.normal(0.0, 1.0, size=(n, d))  # bruit propre
         eps = sigma * (np.sqrt(rho) * z + np.sqrt(1.0 - rho) * w)
         out[cols] = df[cols].to_numpy() + eps
+
+    if "norm_squared" in out.columns:
+        out["norm_squared"] = norm_squared(extract_amplitudes(out))
+    return out
+
+
+def add_calibration_drift(
+    df: pd.DataFrame,
+    n_shots: int = 1000,
+    drift_amplitude: float = 0.08,
+    drift_period: float = 2000.0,
+    seed: Optional[int] = None,
+) -> pd.DataFrame:
+    """
+    Dérive de calibration lentement variable + bruit de mesure (jalon 4b —
+    le régime NON STATIONNAIRE, conçu pour mettre en échec tout seuil fixe).
+
+    Modèle
+    ------
+    Chaque état porte un instant d'acquisition t (son index dans le
+    DataFrame). La chaîne de mesure a un gain qui dérive lentement :
+
+        g(t) = A·sin(2πt/T)
+        ĉᵢ(t) = (1 + g(t))·cᵢ + εᵢ,     εᵢ ~ N(0, σ²),  σ = 1/(2√N)
+
+    Lecture : « g de t égale A sinus de deux pi t sur T » ; « c-i-chapeau
+    égale un plus g de t, fois c-i, plus le bruit de grenaille ».
+
+    Conséquence sur la norme : ‖ψ̂‖² ≈ (1+g(t))²·‖ψ‖². Un état VALIDE lu à
+    l'extrême de la dérive affiche (1±A)² ≈ 1±2A : avec A = 0.08, la norme
+    apparente balaie [0.85, 1.17] — bien au-delà de la bande de validité
+    ±0.05. Un seuil fixe, si bien calibré soit-il au temps t₀, devient
+    systématiquement faux ailleurs dans le cycle.
+
+    Physique
+    --------
+    C'est LE problème central de l'instrumentation embarquée : dérive
+    thermique orbitale (cycle jour/nuit d'un satellite), vieillissement des
+    chaînes d'acquisition, fluctuation de la puissance du laser de lecture.
+    La réponse classique de l'ingénieur est la recalibration périodique ;
+    la réponse ML est d'apprendre la carte de calibration g(t) depuis les
+    données. Le notebook 10 confronte les deux.
+
+    Paramètres
+    ----------
+    df              : dataset au schéma standard (l'ordre des lignes définit
+                      le temps d'acquisition).
+    n_shots         : budget de mesures N (bruit de grenaille σ = 1/(2√N)).
+    drift_amplitude : A, amplitude relative de la dérive de gain (ex. 0.08
+                      = ±8 %). Doit vérifier |A| < 1.
+    drift_period    : T, période de la dérive en nombre d'états acquis.
+    seed            : graine de reproductibilité (bruit de grenaille).
+
+    Retourne
+    --------
+    Copie de ``df`` avec colonne ``acquisition_time`` (t), amplitudes
+    dérivées+bruitées, ``norm_squared`` recalculée. Label inchangé : la
+    validité est celle de l'état SOUS-JACENT, pas de sa lecture dérivée.
+    """
+    if not (abs(drift_amplitude) < 1.0):
+        raise ValueError(
+            f"drift_amplitude doit vérifier |A| < 1, reçu: {drift_amplitude}"
+        )
+    if drift_period <= 0:
+        raise ValueError(f"drift_period doit être > 0, reçu: {drift_period}")
+
+    sigma = sigma_from_shots(n_shots)
+    rng = np.random.default_rng(seed)
+    out = df.copy()
+
+    amp_cols = [
+        c
+        for c in df.columns
+        if c.startswith("c") and (c.endswith("_real") or c.endswith("_imag"))
+    ]
+    if not amp_cols:
+        raise ValueError("Aucune colonne d'amplitude c{i}_real / c{i}_imag trouvée.")
+
+    n = len(df)
+    t = np.arange(n, dtype=float)
+    gain = 1.0 + drift_amplitude * np.sin(2.0 * np.pi * t / drift_period)
+
+    noise = rng.normal(0.0, sigma, size=(n, len(amp_cols)))
+    out[amp_cols] = df[amp_cols].to_numpy() * gain[:, np.newaxis] + noise
+    out["acquisition_time"] = t
 
     if "norm_squared" in out.columns:
         out["norm_squared"] = norm_squared(extract_amplitudes(out))

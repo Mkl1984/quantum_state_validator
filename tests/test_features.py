@@ -200,3 +200,48 @@ def test_correlated_noise_validation(small_dataset):
         add_correlated_noise(small_dataset, rho=1.0)
     with pytest.raises(ValueError):
         add_correlated_noise(small_dataset, rho=-0.1)
+
+
+# ---------------------------------------------------------------------------
+# Dérive de calibration (jalon 4b)
+# ---------------------------------------------------------------------------
+
+
+def test_calibration_drift_structure(small_dataset):
+    """Le gain suit A·sin(2πt/T) : vérifiable sur les états valides."""
+    from src.features import add_calibration_drift
+
+    A, T = 0.1, 100.0
+    drifted = add_calibration_drift(
+        small_dataset, n_shots=100_000, drift_amplitude=A, drift_period=T, seed=0
+    )
+    assert "acquisition_time" in drifted.columns
+    # Bruit de grenaille quasi nul (N énorme) : ‖ψ̂‖² ≈ (1+g(t))²·‖ψ‖².
+    # Vérifié sur les états VALIDES uniquement : pour les états extrêmes
+    # quasi nuls (‖ψ‖² ~ 1e-4), le ratio bruit/norme diverge par construction.
+    t = drifted["acquisition_time"].to_numpy()
+    expected_gain2 = (1 + A * np.sin(2 * np.pi * t / T)) ** 2
+    mask = small_dataset["is_valid"].to_numpy() == 1
+    ratio = drifted["norm_squared"].to_numpy()[mask] / (
+        small_dataset["norm_squared"].to_numpy()[mask] * expected_gain2[mask]
+    )
+    np.testing.assert_allclose(ratio, 1.0, atol=5e-2)
+    # Label inchangé
+    pd.testing.assert_series_equal(drifted["is_valid"], small_dataset["is_valid"])
+
+
+def test_calibration_drift_validation(small_dataset):
+    from src.features import add_calibration_drift
+
+    with pytest.raises(ValueError):
+        add_calibration_drift(small_dataset, drift_amplitude=1.5)
+    with pytest.raises(ValueError):
+        add_calibration_drift(small_dataset, drift_period=0)
+
+
+def test_calibration_drift_reproducible(small_dataset):
+    from src.features import add_calibration_drift
+
+    a = add_calibration_drift(small_dataset, n_shots=500, seed=4)
+    b = add_calibration_drift(small_dataset, n_shots=500, seed=4)
+    pd.testing.assert_frame_equal(a, b)
