@@ -245,3 +245,31 @@ def test_calibration_drift_reproducible(small_dataset):
     a = add_calibration_drift(small_dataset, n_shots=500, seed=4)
     b = add_calibration_drift(small_dataset, n_shots=500, seed=4)
     pd.testing.assert_frame_equal(a, b)
+
+
+# ---------------------------------------------------------------------------
+# Dimension-agnostic behaviour (milestone 4d)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("dim", [2, 8, 16])
+def test_invariant_features_bounds_any_dimension(dim):
+    """The feature pipeline must not be hard-wired to d = 4."""
+    states = generate_valid_states(300, dim=dim, strategy="random", seed=13)
+    f = scale_invariant_features(states)
+    assert (f["entropy_shannon"] >= -1e-9).all()
+    assert (f["entropy_shannon"] <= np.log(dim) + 1e-9).all()
+    assert (f["purity_normalized"] >= 1 / dim - 1e-9).all()
+    assert (f["participation_ratio"] <= dim + 1e-9).all()
+
+
+@pytest.mark.parametrize("dim", [2, 8])
+def test_measurement_noise_any_dimension(dim):
+    df = create_dataset(n_valid=100, n_invalid=100, dim=dim, seed=3)
+    noisy = add_measurement_noise(df, n_shots=500, seed=1)
+    assert noisy.shape == df.shape
+    np.testing.assert_allclose(
+        noisy["norm_squared"].to_numpy(),
+        norm_squared(extract_amplitudes(noisy)),
+        rtol=1e-10,
+    )
