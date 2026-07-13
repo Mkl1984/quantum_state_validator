@@ -3,9 +3,15 @@
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) ;
 versionnement [SemVer](https://semver.org/lang/fr/).
 
-## [Non publié]
+## [0.4.0] — 2026-07-07
+
+Jalon 4 complet : « où le ML gagne-t-il sa place ? » — quatre régimes
+étudiés, expériences avant interprétations, résultats négatifs assumés.
 
 ### Ajouté
+- Jalon 4d : notebook 12 (exécuté, EN) — pipeline d-agnostique (validation
+  plus facile quand d croît : concentration de la mesure), abaque
+  N ↔ taux d'erreur (FPR ≤ 1 % ⇒ N ≈ 2000 à marge 0.05), tests paramétrés
 - Jalon 4c : `src/preparation.py` (QA de préparation contre cibles connues,
   rédigé en anglais) et notebook 11 (exécuté, en anglais) : la référence
   directionnelle brise la limite d'isotropie du nb 09 ; statistique double

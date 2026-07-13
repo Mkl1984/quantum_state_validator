@@ -28,7 +28,7 @@ EDA avancée (Plotly 3D, simplex), split stratifié 60/20/20, scaling sans fuite
 - Garantie de frontière de classe (`norm_margin`), dataset régénéré (seed=42)
 - 28 tests pytest, CI GitHub Actions, hygiène Git complète, docs open source
 
-### 🔄 Jalon 4 — Là où le ML gagne sa place (v0.4.0) — EN COURS
+### ✅ Jalon 4 — Là où le ML gagne sa place (v0.4.0) — CLOS
 
 **4a (fait, notebook 09)** :
 - ✅ Bruit équicorrélé (`add_correlated_noise`) — **résultat négatif assumé** :
@@ -54,12 +54,17 @@ EDA avancée (Plotly 3D, simplex), split stratifié 60/20/20, scaling sans fuite
   paire (norme, fidélité) atteint 0.92 avec un arbre de profondeur 3 et
   bat le RF sur amplitudes brutes — 4e leçon « représentation > algorithme ».
 
-**4d (reste)** :
-- Dimensions variables (d ≠ 4) et features indépendantes de d
-- Abaques budget N ↔ taux d'erreur (courbes de dimensionnement)
-- (optionnel) bruit coloré par composante
+**4d (fait, notebook 12)** :
+- ✅ Dimensions variables : pipeline d-agnostique vérifié (d ∈ {2,4,8,16},
+  tests paramétrés). Résultat contre-intuitif documenté : la validation
+  devient PLUS facile quand d croît (concentration de la mesure), avec
+  le caveat honnête sur la population d'invalides du générateur.
+- ✅ Abaque N ↔ taux d'erreur : FPR 19 % à N=25 → 1.1 % à N=1600 →
+  plancher à N≈6400 (marge 0.05, d=4). Énoncé de dimensionnement :
+  FPR ≤ 1 % exige N ≈ 2000 ; marge et budget s'échangent comme stabilité
+  et temps d'intégration dans un budget d'horloge GNSS.
 
-Risque principal : garder chaque extension physiquement motivée.
+**Le jalon 4 est clos (v0.4.0).**
 
 ## Conventions du projet (directives du 2026-07-07)
 
