@@ -13,14 +13,17 @@ quel que soit le cwd.
 
 Usage
 -----
->>> from src.paths import DATA_PROCESSED, MODELS_DIR
+>>> from qsv.paths import DATA_PROCESSED, MODELS_DIR
 >>> df = pd.read_csv(DATA_PROCESSED / "quantum_states_10000.csv")
 """
 
 from pathlib import Path
 
-#: Racine du dépôt : ce fichier vit dans <racine>/src/, donc parents[1].
-PROJECT_ROOT: Path = Path(__file__).resolve().parents[1]
+#: Repository root: this file lives at <root>/src/qsv/, hence parents[2].
+#: NOTE: these paths serve the REPOSITORY workflow (notebooks, dataset
+#: regeneration). When qsv is pip-installed inside another project, use your
+#: own paths - the library functions never depend on this module.
+PROJECT_ROOT: Path = Path(__file__).resolve().parents[2]
 
 DATA_DIR: Path = PROJECT_ROOT / "data"
 DATA_RAW: Path = DATA_DIR / "raw"

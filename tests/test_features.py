@@ -9,8 +9,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.data_generation import create_dataset, generate_valid_states
-from src.features import (
+from qsv.data_generation import create_dataset, generate_valid_states
+from qsv.features import (
     add_measurement_noise,
     compute_features,
     extract_amplitudes,
@@ -169,7 +169,7 @@ def test_noise_shrinks_with_budget(small_dataset):
 
 def test_correlated_noise_structure(small_dataset):
     """Corr(εᵢ, εⱼ) ≈ ρ hors diagonale, Var(εᵢ) ≈ σ² inchangée."""
-    from src.features import add_correlated_noise
+    from qsv.features import add_correlated_noise
 
     rho, n_shots = 0.8, 50
     noisy = add_correlated_noise(small_dataset, n_shots=n_shots, rho=rho, seed=3)
@@ -184,7 +184,7 @@ def test_correlated_noise_structure(small_dataset):
 
 def test_correlated_noise_rho_zero_is_iid(small_dataset):
     """ρ = 0 : corrélation hors diagonale ≈ 0 (équivalent i.i.d.)."""
-    from src.features import add_correlated_noise
+    from qsv.features import add_correlated_noise
 
     noisy = add_correlated_noise(small_dataset, n_shots=100, rho=0.0, seed=3)
     real_cols = [f"c{i}_real" for i in range(4)]
@@ -194,7 +194,7 @@ def test_correlated_noise_rho_zero_is_iid(small_dataset):
 
 
 def test_correlated_noise_validation(small_dataset):
-    from src.features import add_correlated_noise
+    from qsv.features import add_correlated_noise
 
     with pytest.raises(ValueError):
         add_correlated_noise(small_dataset, rho=1.0)
@@ -209,7 +209,7 @@ def test_correlated_noise_validation(small_dataset):
 
 def test_calibration_drift_structure(small_dataset):
     """Le gain suit A·sin(2πt/T) : vérifiable sur les états valides."""
-    from src.features import add_calibration_drift
+    from qsv.features import add_calibration_drift
 
     A, T = 0.1, 100.0
     drifted = add_calibration_drift(
@@ -231,7 +231,7 @@ def test_calibration_drift_structure(small_dataset):
 
 
 def test_calibration_drift_validation(small_dataset):
-    from src.features import add_calibration_drift
+    from qsv.features import add_calibration_drift
 
     with pytest.raises(ValueError):
         add_calibration_drift(small_dataset, drift_amplitude=1.5)
@@ -240,7 +240,7 @@ def test_calibration_drift_validation(small_dataset):
 
 
 def test_calibration_drift_reproducible(small_dataset):
-    from src.features import add_calibration_drift
+    from qsv.features import add_calibration_drift
 
     a = add_calibration_drift(small_dataset, n_shots=500, seed=4)
     b = add_calibration_drift(small_dataset, n_shots=500, seed=4)

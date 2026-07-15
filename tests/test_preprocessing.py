@@ -6,8 +6,8 @@ fuite train→val/test dans le scaling.
 import numpy as np
 import pytest
 
-from src.data_generation import create_dataset
-from src.preprocessing import prepare_features_and_target, scale_features, split_data
+from qsv.data_generation import create_dataset
+from qsv.preprocessing import prepare_features_and_target, scale_features, split_data
 
 
 @pytest.fixture()
@@ -64,7 +64,7 @@ def test_scaler_fits_on_train_only(xy, tmp_path):
 
 def test_scale_features_methods(xy):
     """Q3 : les trois méthodes de scaling sont réelles et distinctes."""
-    from src.preprocessing import scale_features, split_data
+    from qsv.preprocessing import scale_features, split_data
 
     X, y = xy
     X_tr, X_val, X_te, *_ = split_data(X, y, random_state=0)

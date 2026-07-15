@@ -91,10 +91,13 @@ quantum_state_validator/
 │   ├── 06_test_preprocessing.ipynb    # Pipeline de preprocessing
 │   ├── 07_model_evaluation.ipynb      # ARCHIVÉ : cas d'école de target leakage
 │   └── 08_measurement_noise.ipynb     # Formulation honnête : bruit de mesure
-├── src/
+├── src/qsv/                     # Paquet installable (pip install -e .)
+│   ├── validators.py            # Logique de décision pure — le mode bibliothèque
+│   ├── api.py                   # Service HTTP FastAPI — enveloppe mince
 │   ├── data_generation.py       # États valides/invalides, garantie de frontière F2
-│   ├── features.py              # Features invariantes vs sensibles + bruit tomographique
-│   ├── paths.py                 # Chemins ancrés sur la racine du projet
+│   ├── features.py              # Features invariantes vs sensibles + bruits
+│   ├── preparation.py           # QA de préparation contre cibles connues
+│   ├── paths.py                 # Chemins du dépôt (notebooks)
 │   └── preprocessing.py         # Split stratifié 60/20/20 + scaling sans fuite
 ├── tests/                       # 28 tests pytest (anti-leakage, garantie F2, splits)
 ├── reports/                     # Audit complet + rapports de session
@@ -159,12 +162,58 @@ pip install -r requirements.txt
 - plotly >= 5.14.0
 - jupyter >= 1.0.0
 
-#### 4. Vérifier l'Installation
+#### 4. Installer le paquet et vérifier
 
 ```bash
-python -c "from src.data_generation import create_dataset; print('Installation réussie')"
-pytest tests/ -q        # 28 tests doivent passer
+pip install -e ".[api,dev]"
+python -c "import qsv; print('qsv', qsv.__version__)"
+pytest tests/ -q        # toute la suite doit passer
 ```
+
+---
+
+## Utilisation — deux modes distincts et combinables
+
+QSV s'utilise **sans l'application**, comme n'importe quelle bibliothèque
+Python, ou comme un service HTTP — les deux modes partagent exactement la
+même logique de décision (`qsv/validators.py`), issue des notebooks 08-12.
+
+### Mode 1 : bibliothèque (dans votre propre projet)
+
+```python
+from qsv import validate_state, preparation_qa
+
+# Exact amplitudes: validity is computed, not inferred
+result = validate_state(real=[1.0, 0, 0, 0], imag=[0.0, 0, 0, 0])
+print(result.valid, result.explanation)
+
+# Finite-shot tomography data: bias-corrected threshold test,
+# with a budget-sufficiency flag (notebook 12 sizing curve)
+result = validate_state(real, imag, n_shots=500, margin=0.05)
+
+# Known-target preparation QA: two-channel gain/pointing monitor
+result = preparation_qa(real, imag, target_real, target_imag)
+print(result.error_type)   # "ok" | "gain_error" | "pointing_error" | ...
+```
+
+### Mode 2 : service HTTP (depuis n'importe quel langage)
+
+```bash
+uvicorn qsv.api:app --reload
+# puis http://localhost:8000/docs (documentation OpenAPI interactive)
+```
+
+```bash
+curl -X POST http://localhost:8000/validate \
+  -H "Content-Type: application/json" \
+  -d '{"real": [1.0, 0, 0, 0], "imag": [0.0, 0, 0, 0], "n_shots": 500}'
+```
+
+### Combinés
+
+Le service est un client de la bibliothèque : un pipeline Python peut
+importer `qsv` directement pendant qu'une application distante interroge la
+même logique via HTTP — aucune divergence possible entre les deux verdicts.
 
 La même vérification tourne en intégration continue (GitHub Actions) à chaque push : formatage `black --check` puis suite `pytest` sur Python 3.10 et 3.12.
 

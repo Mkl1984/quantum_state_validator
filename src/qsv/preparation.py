@@ -31,7 +31,7 @@ from typing import Optional, Tuple
 import numpy as np
 import pandas as pd
 
-from src.features import norm_squared, sigma_from_shots
+from qsv.features import norm_squared, sigma_from_shots
 
 logger = logging.getLogger(__name__)
 

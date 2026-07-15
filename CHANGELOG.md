@@ -6,6 +6,11 @@ versionnement [SemVer](https://semver.org/lang/fr/).
 ## [Non publié]
 
 ### Ajouté
+- Jalon 5b : paquet installable `quantum-state-validator` (src-layout,
+  pyproject) — logique de décision extraite dans `qsv/validators.py`,
+  utilisable en bibliothèque (`from qsv import validate_state`) OU via le
+  service HTTP (enveloppe mince), les deux combinables ; notebooks
+  rebranchés sur le paquet et ré-exécutés ; CI sur `pip install -e .`
 - Jalon 5a : API FastAPI (`src/api.py`, EN) servant les validateurs gagnants
   du jalon 4 (aucun modèle ML — décision d'architecture documentée) :
   `/validate` exact/bruité avec avertissement de budget, `/preparation-qa`

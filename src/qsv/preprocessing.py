@@ -168,7 +168,7 @@ if __name__ == "__main__":
     logger.info("Test du module preprocessing.py")
 
     # Import du module de génération
-    from data_generation import load_dataset
+    from qsv.data_generation import load_dataset
 
     # Charge le dataset
     df = load_dataset()

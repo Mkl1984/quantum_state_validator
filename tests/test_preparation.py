@@ -3,8 +3,8 @@
 import numpy as np
 import pytest
 
-from src.features import extract_amplitudes
-from src.preparation import (
+from qsv.features import extract_amplitudes
+from qsv.preparation import (
     create_preparation_dataset,
     fidelity_to_target,
     make_targets,

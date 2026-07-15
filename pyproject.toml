@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quantum-state-validator"
+description = "Physics-based validation of quantum state vectors with an honest measurement-noise model"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Mandem (Mkl1984)" }]
+requires-python = ">=3.10"
+dynamic = ["version"]
+dependencies = [
+    "numpy>=1.24.0",
+    "pandas>=2.0.0",
+    "scikit-learn>=1.3.0",
+    "joblib>=1.3.0",
+]
+
+[project.optional-dependencies]
+api = ["fastapi>=0.110.0", "uvicorn>=0.29.0"]
+dev = ["pytest>=7.4.0", "httpx>=0.27.0", "black>=23.0.0"]
+
+[project.urls]
+Repository = "https://github.com/Mkl1984/quantum_state_validator"
+Changelog = "https://github.com/Mkl1984/quantum_state_validator/blob/main/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.dynamic]
+version = { attr = "qsv.__version__" }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.black]
+target-version = ["py310"]

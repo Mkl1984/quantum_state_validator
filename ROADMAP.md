@@ -89,7 +89,16 @@ du biais, paire norme/fidélité), pas de modèle ML entraîné. Endpoints
 sur l'abaque du nb 12) et `/preparation-qa` (moniteur deux canaux du nb 11),
 réponses avec explications pédagogiques, docs OpenAPI générées. 7 tests.
 
-**5b (reste)** :
+**5b (fait)** : ✅ Double mode d'utilisation — paquet installable
+`quantum-state-validator` (pyproject, src-layout, `pip install -e .`) :
+la logique de décision vit dans `qsv/validators.py` (pur, sans HTTP),
+importable dans tout projet (`from qsv import validate_state,
+preparation_qa`) ; l'API devient une enveloppe mince du même code.
+Les deux modes sont combinables par construction. Notebooks rebranchés
+sur le paquet et ré-exécutés (le 04 reproduit toujours le CSV octet
+pour octet).
+
+**5c (reste)** :
 - Interface pédagogique interactive (parcours guidés, quiz adaptatifs,
   validation étape par étape — voir la vision du projet)
 - Interface pédagogique interactive (parcours guidés, quiz adaptatifs,

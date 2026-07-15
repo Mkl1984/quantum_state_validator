@@ -6,7 +6,7 @@ de classe (audit 2026-07-07).
 import numpy as np
 import pytest
 
-from src.data_generation import (
+from qsv.data_generation import (
     create_dataset,
     generate_invalid_states,
     generate_valid_states,
@@ -118,7 +118,7 @@ def test_create_dataset_reproducible():
 
 
 def test_extreme_strategy_respects_margin():
-    from src.data_generation import generate_invalid_states
+    from qsv.data_generation import generate_invalid_states
 
     states = generate_invalid_states(500, dim=DIM, strategy="extreme", seed=2)
     norms_sq = np.sum(np.abs(states) ** 2, axis=1)
@@ -126,7 +126,7 @@ def test_extreme_strategy_respects_margin():
 
 
 def test_multiclass_dataset_schema_and_labels():
-    from src.data_generation import create_multiclass_dataset
+    from qsv.data_generation import create_multiclass_dataset
 
     df = create_multiclass_dataset(n_valid=200, n_per_cause=50, dim=DIM, seed=9)
     assert len(df) == 200 + 4 * 50
@@ -143,7 +143,7 @@ def test_multiclass_dataset_schema_and_labels():
 
 
 def test_multiclass_dataset_reproducible():
-    from src.data_generation import create_multiclass_dataset
+    from qsv.data_generation import create_multiclass_dataset
 
     a = create_multiclass_dataset(50, 20, dim=DIM, seed=7)
     b = create_multiclass_dataset(50, 20, dim=DIM, seed=7)
