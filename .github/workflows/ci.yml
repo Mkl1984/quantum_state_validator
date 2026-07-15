@@ -27,7 +27,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install numpy pandas scikit-learn joblib pytest black
+          pip install numpy pandas scikit-learn joblib pytest black fastapi httpx
 
       - name: Lint (black --check)
         run: black --check --diff src/ tests/

@@ -3,6 +3,14 @@
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) ;
 versionnement [SemVer](https://semver.org/lang/fr/).
 
+## [Non publié]
+
+### Ajouté
+- Jalon 5a : API FastAPI (`src/api.py`, EN) servant les validateurs gagnants
+  du jalon 4 (aucun modèle ML — décision d'architecture documentée) :
+  `/validate` exact/bruité avec avertissement de budget, `/preparation-qa`
+  deux canaux, docs OpenAPI ; 7 tests TestClient ; fastapi/httpx en CI
+
 ## [0.4.0] — 2026-07-07
 
 Jalon 4 complet : « où le ML gagne-t-il sa place ? » — quatre régimes

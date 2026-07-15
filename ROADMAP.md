@@ -80,8 +80,18 @@ EDA avancée (Plotly 3D, simplex), split stratifié 60/20/20, scaling sans fuite
   l'historique Git — rien d'inventé) ; traduction intégrale en anglais ;
   pas d'emoji ; style naturel sans sur-ingénierie.
 
-### 🔮 Jalon 5 — Production et interface (v1.0.0)
-- API de prédiction (FastAPI) + modèle exporté
+### 🔄 Jalon 5 — Production et interface (v1.0.0) — EN COURS
+
+**5a (fait)** : ✅ API FastAPI (`src/api.py`, EN) — décision d'architecture
+issue du jalon 4 : l'API sert les validateurs GAGNANTS (test à seuil corrigé
+du biais, paire norme/fidélité), pas de modèle ML entraîné. Endpoints
+`/validate` (modes exact/bruité, avertissement de budget insuffisant fondé
+sur l'abaque du nb 12) et `/preparation-qa` (moniteur deux canaux du nb 11),
+réponses avec explications pédagogiques, docs OpenAPI générées. 7 tests.
+
+**5b (reste)** :
+- Interface pédagogique interactive (parcours guidés, quiz adaptatifs,
+  validation étape par étape — voir la vision du projet)
 - Interface pédagogique interactive (parcours guidés, quiz adaptatifs,
   validation étape par étape — voir la vision du projet)
 - Rebranchement notebooks 04/06 sur `src/paths.py` + ré-exécution complète
