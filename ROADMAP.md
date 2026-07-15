@@ -66,6 +66,27 @@ EDA avancée (Plotly 3D, simplex), split stratifié 60/20/20, scaling sans fuite
 
 **Le jalon 4 est clos (v0.4.0).**
 
+## Phase finale — état d'avancement
+
+**Fait** :
+- ✅ Notebook 13 `13_project_report.ipynb` (EN, exécuté) : rapport de projet
+  complet + carnet de bord des erreurs à la première personne (section 7),
+  construit exclusivement sur reports/ et l'historique Git.
+- ✅ Traduction EN : `qsv/features.py` (module central), en plus des modules
+  nés en anglais (validators, api, preparation).
+
+**Checklist de traduction restante** (ordre de priorité) :
+- [ ] `qsv/data_generation.py` (docstrings/commentaires FR)
+- [ ] `qsv/preprocessing.py`, `qsv/paths.py`, `tests/` (docstrings FR)
+- [ ] `README.md` (FR → EN intégral)
+- [ ] Notebooks 01-06 : alléger le markdown (convention « notebooks de code
+  sobres ») + traduire les commentaires + ré-exécuter
+- [ ] Notebooks 07-10 : markdown FR → EN + ré-exécution (figures avec
+  labels FR à refaire)
+- [ ] CONTRIBUTING.md, data/README.md, ROADMAP.md, CHANGELOG.md
+- Note : les rapports de session dans reports/ antérieurs au 2026-07-08
+  restent en français — ce sont des archives historiques datées.
+
 ## Conventions du projet (directives du 2026-07-07)
 
 - **Langue : anglais partout** — code, commentaires, figures, documentation.

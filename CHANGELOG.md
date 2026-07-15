@@ -6,6 +6,10 @@ versionnement [SemVer](https://semver.org/lang/fr/).
 ## [Non publié]
 
 ### Ajouté
+- Phase finale : notebook 13 `13_project_report.ipynb` (EN, exécuté) —
+  rapport de projet complet avec retour d'expérience des erreurs réelles
+  à la première personne ; `qsv/features.py` traduit en anglais (57 tests
+  valident la transcription)
 - Jalon 5b : paquet installable `quantum-state-validator` (src-layout,
   pyproject) — logique de décision extraite dans `qsv/validators.py`,
   utilisable en bibliothèque (`from qsv import validate_state`) OU via le
