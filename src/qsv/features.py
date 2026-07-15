@@ -1,46 +1,46 @@
 """
 Module: features.py
-Objectif: Features quantiques avec séparation explicite entre features
-          sensibles à l'échelle (qui « voient » la norme) et features
-          invariantes d'échelle (qui ne la voient pas).
+Purpose: quantum-state features with an explicit split between
+         scale-SENSITIVE features (which "see" the norm) and
+         scale-INVARIANT features (which cannot).
 
-Pourquoi ce module existe (audit §4 — target leakage du notebook 07)
-====================================================================
+Why this module exists (audit section 4 - the notebook 07 target leakage)
+==========================================================================
 
-La validité d'un état |ψ⟩ = (c₁, …, c_d) est définie par ‖ψ‖² = Σᵢ |cᵢ|² = 1.
-C'est une fonction **déterministe** des features brutes. Conséquence :
+The validity of a state |psi> = (c_1, ..., c_d) is defined by
+||psi||^2 = sum_i |c_i|^2 = 1. That is a DETERMINISTIC function of the raw
+features. Consequences:
 
-- Toute feature *sensible à l'échelle* (norm_squared, norm_deviation, mais
-  aussi entropy/purity calculées sur les |cᵢ|² bruts) contient la réponse :
-  le « modèle » ne fait que réapprendre la définition du label → 100 %
-  d'accuracy, zéro science.
-- Toute feature *invariante d'échelle* (calculée sur les probabilités
-  renormalisées p̃ᵢ) ne contient par construction AUCUNE information sur la
-  validité : c → k·c laisse p̃ᵢ inchangé, donc la feature ne peut pas
-  distinguer un état de son multiple invalide.
+- Any scale-sensitive feature (norm_squared, norm_deviation, but also
+  entropy/purity computed on the raw |c_i|^2) contains the answer: a
+  "model" trained on it merely re-learns the label definition - 100%
+  accuracy, zero science.
+- Any scale-invariant feature (computed on the renormalized probabilities
+  p_tilde_i) carries, by construction, NO information about validity:
+  c -> k*c leaves p_tilde_i unchanged, so the feature cannot distinguish a
+  state from its invalid multiple.
 
-Il n'y a pas de milieu : sur données exactes, le problème est soit trivial,
-soit impossible. Le problème ne devient un vrai problème d'apprentissage
-statistique QUE si les amplitudes sont observées avec du bruit — voir
-``add_measurement_noise`` et le notebook 08.
+There is no middle ground: on exact data the problem is either trivial or
+impossible. It becomes a genuine statistical learning problem ONLY when the
+amplitudes are observed through noise - see ``add_measurement_noise`` and
+notebook 08.
 
-Rappel physique fondamental
----------------------------
-La norme d'un état quantique n'est PAS une observable : les statistiques de
-mesure de |ψ⟩ et de k|ψ⟩ sont identiques (règle de Born renormalisée,
-P(i) = |cᵢ|²/‖ψ‖²). Valider ‖ψ‖² = 1 est donc un contrôle de *données*
-(sorties de tomographie, de simulateurs, de pipelines numériques), pas une
-mesure physique. C'est exactement le rôle d'un module de qualification de
-données dans un système embarqué : horloges atomiques GNSS, gyromètres à
-interférométrie atomique ou liens QKD par satellite doivent qualifier leurs
-états reconstruits à partir de statistiques finies, jamais des amplitudes
-exactes.
+Fundamental physics reminder
+----------------------------
+The norm of a quantum state is NOT an observable: the measurement
+statistics of |psi> and k|psi> are identical (renormalized Born rule,
+P(i) = |c_i|^2 / ||psi||^2). Checking ||psi||^2 = 1 is therefore a *data*
+quality check (tomography outputs, simulators, numerical pipelines), not a
+physical measurement. This is exactly the role of a data-qualification
+module in an embedded system: GNSS atomic clocks, atom-interferometry
+gyroscopes and satellite QKD links must qualify their reconstructed states
+from finite statistics, never from exact amplitudes.
 
 Conventions
 -----------
-Le DataFrame d'entrée suit le schéma du dataset principal :
-colonnes ``c{i}_real`` / ``c{i}_imag`` pour i = 0 … d−1.
-Aucune fonction de ce module n'imprime : elles retournent, point.
+Input DataFrames follow the main dataset schema: columns ``c{i}_real`` /
+``c{i}_imag`` for i = 0 ... d-1. No function in this module prints:
+they return, period.
 """
 
 from typing import Optional
@@ -61,7 +61,7 @@ __all__ = [
     "sigma_from_shots",
 ]
 
-# Garde numérique pour log(0) dans l'entropie.
+# Numerical guard for log(0) in the entropy.
 _EPS = 1e-12
 
 
@@ -72,23 +72,23 @@ _EPS = 1e-12
 
 def extract_amplitudes(df: pd.DataFrame) -> np.ndarray:
     """
-    Reconstruit la matrice complexe des amplitudes depuis les colonnes plates.
+    Rebuild the complex amplitude matrix from the flat columns.
 
-    Lecture de la formule : states[n, i] = c{i}_real[n] + i·c{i}_imag[n],
-    soit « l'amplitude i de l'état n est la partie réelle plus i fois la
-    partie imaginaire ».
+    Reading the formula: states[n, i] = c{i}_real[n] + i * c{i}_imag[n],
+    i.e. "amplitude i of state n is the real part plus i times the
+    imaginary part".
 
-    Paramètres
+    Parameters
     ----------
-    df : DataFrame contenant les colonnes ``c{i}_real`` / ``c{i}_imag``.
+    df : DataFrame with ``c{i}_real`` / ``c{i}_imag`` columns.
 
-    Retourne
-    --------
-    states : ndarray complexe de forme (n_samples, dim).
+    Returns
+    -------
+    states : complex ndarray of shape (n_samples, dim).
 
-    Lève
-    ----
-    ValueError si les colonnes d'amplitudes sont absentes ou dépareillées.
+    Raises
+    ------
+    ValueError if the amplitude columns are missing or mismatched.
     """
     real_cols = sorted(
         (c for c in df.columns if c.startswith("c") and c.endswith("_real")),
@@ -100,7 +100,7 @@ def extract_amplitudes(df: pd.DataFrame) -> np.ndarray:
     )
     if not real_cols or len(real_cols) != len(imag_cols):
         raise ValueError(
-            "Colonnes d'amplitudes introuvables ou dépareillées "
+            "Amplitude columns missing or mismatched "
             f"(real: {len(real_cols)}, imag: {len(imag_cols)})."
         )
     return df[real_cols].to_numpy() + 1j * df[imag_cols].to_numpy()
@@ -108,47 +108,47 @@ def extract_amplitudes(df: pd.DataFrame) -> np.ndarray:
 
 def raw_probabilities(states: np.ndarray) -> np.ndarray:
     """
-    Poids bruts pᵢ = |cᵢ|² (NON renormalisés — ce ne sont des probabilités
-    au sens strict que si l'état est valide).
+    Raw weights p_i = |c_i|^2 (NOT renormalized - they are probabilities in
+    the strict sense only when the state is valid).
 
-    Lecture : « p i égale module de c i au carré ».
+    Reading: "p i equals the squared modulus of c i".
     """
     return np.abs(states) ** 2
 
 
 def norm_squared(states: np.ndarray) -> np.ndarray:
     """
-    Norme au carré ‖ψ‖² = Σᵢ |cᵢ|² de chaque état.
+    Squared norm ||psi||^2 = sum_i |c_i|^2 of each state.
 
-    Lecture : « somme sur i des modules carrés des amplitudes ».
-    C'est LA quantité qui définit la validité (= 1 pour un état physique).
+    Reading: "sum over i of the squared amplitude moduli".
+    This is THE quantity that defines validity (= 1 for a physical state).
     """
     return raw_probabilities(states).sum(axis=1)
 
 
 # ---------------------------------------------------------------------------
-# Features SENSIBLES à l'échelle — elles contiennent la réponse
+# Scale-SENSITIVE features - they contain the answer
 # ---------------------------------------------------------------------------
 
 
 def scale_sensitive_features(states: np.ndarray) -> pd.DataFrame:
     """
-    Features qui changent sous c → k·c : elles encodent la norme, donc le
-    label. À n'utiliser QUE (a) sur données bruitées (notebook 08), où elles
-    deviennent des *estimateurs* légitimes, ou (b) pour illustrer le leakage.
+    Features that change under c -> k*c: they encode the norm, hence the
+    label. To be used ONLY (a) on noisy data (notebook 08), where they
+    become legitimate *estimators*, or (b) to illustrate leakage.
 
-    Colonnes retournées
-    -------------------
-    norm_squared   : ‖ψ‖² = Σ|cᵢ|².                      Se transforme en k²·‖ψ‖².
-    norm_deviation : |‖ψ‖² − 1|. C'est littéralement la définition du label —
-                     l'utiliser comme feature EST le leakage du notebook 07.
-    entropy_raw    : −Σ pᵢ ln pᵢ sur les pᵢ BRUTS. Pour un état invalide,
-                     les pᵢ ne somment pas à 1 : cette « entropie » n'en est
-                     pas une (elle peut être négative, énorme…) et elle fuit
-                     la norme.
-    purity_raw     : Σ pᵢ² sur les pᵢ bruts. Se transforme en k⁴·purity :
-                     fuite de norme encore plus violente (10⁸ observé sur les
-                     états extrêmes du dataset).
+    Returned columns
+    ----------------
+    norm_squared   : ||psi||^2 = sum |c_i|^2.       Transforms as k^2 * ||psi||^2.
+    norm_deviation : |  ||psi||^2 - 1 |. This is literally the label
+                     definition - using it as a feature IS the notebook 07
+                     leakage.
+    entropy_raw    : -sum p_i ln p_i on the RAW p_i. For an invalid state
+                     the p_i do not sum to 1: this "entropy" is not one (it
+                     can be negative, huge...) and it leaks the norm.
+    purity_raw     : sum p_i^2 on the raw p_i. Transforms as k^4 * purity:
+                     an even more violent norm leak (1e8 observed on the
+                     dataset's extreme states).
     """
     p = raw_probabilities(states)
     ns = p.sum(axis=1)
@@ -163,37 +163,41 @@ def scale_sensitive_features(states: np.ndarray) -> pd.DataFrame:
 
 
 # ---------------------------------------------------------------------------
-# Features INVARIANTES d'échelle — aveugles à la norme par construction
+# Scale-INVARIANT features - norm-blind by construction
 # ---------------------------------------------------------------------------
 
 
 def scale_invariant_features(states: np.ndarray) -> pd.DataFrame:
     """
-    Features calculées sur les probabilités renormalisées p̃ᵢ = pᵢ / Σⱼ pⱼ.
+    Features computed on the renormalized probabilities
+    p_tilde_i = p_i / sum_j p_j.
 
-    Invariance : sous c → k·c, pᵢ → k²·pᵢ et Σⱼ pⱼ → k²·Σⱼ pⱼ, donc p̃ᵢ est
-    inchangé. Ces features ne peuvent mathématiquement PAS distinguer un état
-    valide de son multiple invalide : un classifieur qui n'utilise qu'elles
-    plafonne à ~50 % sur ce dataset. C'est un résultat, pas un échec — il
-    prouve que toute performance au-dessus du hasard vient de la norme.
+    Invariance: under c -> k*c, p_i -> k^2 * p_i and sum_j p_j -> k^2 *
+    sum_j p_j, so p_tilde_i is unchanged. These features mathematically
+    CANNOT distinguish a valid state from its invalid multiple: a
+    classifier using only them caps at ~50% on this dataset. That is a
+    result, not a failure - it proves that any above-chance performance
+    comes from the norm.
 
-    Colonnes retournées
-    -------------------
-    entropy_shannon     : H(p̃) = −Σ p̃ᵢ ln p̃ᵢ ∈ [0, ln d].
-                          Lecture : « moins la somme des p̃ᵢ log p̃ᵢ ».
-                          Mesure l'étalement de l'état sur la base : 0 pour un
-                          état de base pur, ln d pour la superposition uniforme.
-    purity_normalized   : Σ p̃ᵢ² ∈ [1/d, 1]. Concentration de la distribution
-                          (1 = état de base, 1/d = uniforme).
-    participation_ratio : 1 / Σ p̃ᵢ² ∈ [1, d]. « Nombre effectif de composantes
-                          peuplées » — l'inverse de la pureté, plus lisible
-                          physiquement (≈ combien d'états de base participent).
-    max_prob            : max p̃ᵢ. Poids de la composante dominante.
+    Returned columns
+    ----------------
+    entropy_shannon     : H(p_tilde) = -sum p_tilde_i ln p_tilde_i in [0, ln d].
+                          Reading: "minus the sum of p_tilde_i log p_tilde_i".
+                          Measures the spread of the state over the basis: 0
+                          for a pure basis state, ln d for the uniform
+                          superposition.
+    purity_normalized   : sum p_tilde_i^2 in [1/d, 1]. Concentration of the
+                          distribution (1 = basis state, 1/d = uniform).
+    participation_ratio : 1 / sum p_tilde_i^2 in [1, d]. "Effective number
+                          of populated components" - the inverse purity,
+                          physically more readable (roughly how many basis
+                          states participate).
+    max_prob            : max p_tilde_i. Weight of the dominant component.
     """
     p = raw_probabilities(states)
     total = p.sum(axis=1, keepdims=True)
-    # États pathologiques de norme quasi nulle : renormalisation impossible,
-    # on retombe sur une distribution uniforme (choix documenté, testé).
+    # Pathological near-zero-norm states: renormalization is impossible, we
+    # fall back to a uniform distribution (documented choice, tested).
     dim = p.shape[1]
     safe_total = np.where(total < _EPS, 1.0, total)
     p_tilde = np.where(total < _EPS, 1.0 / dim, p / safe_total)
@@ -211,19 +215,19 @@ def scale_invariant_features(states: np.ndarray) -> pd.DataFrame:
 
 def compute_features(df: pd.DataFrame, kind: str = "invariant") -> pd.DataFrame:
     """
-    Point d'entrée : calcule un bloc de features depuis le DataFrame du dataset.
+    Entry point: compute a feature block from the dataset DataFrame.
 
-    Paramètres
+    Parameters
     ----------
-    kind : "invariant" (sans fuite de norme), "sensitive" (avec fuite —
-           assumée et documentée), ou "all" (les deux, pour comparaison).
+    kind : "invariant" (no norm leak), "sensitive" (leaking - owned and
+           documented), or "all" (both, for comparisons).
 
-    Retourne
-    --------
-    DataFrame de features, même index que ``df``.
+    Returns
+    -------
+    Feature DataFrame, same index as ``df``.
     """
     if kind not in ("invariant", "sensitive", "all"):
-        raise ValueError(f"kind '{kind}' inconnu (invariant | sensitive | all).")
+        raise ValueError(f"Unknown kind '{kind}' (invariant | sensitive | all).")
     states = extract_amplitudes(df)
     blocks = []
     if kind in ("invariant", "all"):
@@ -236,29 +240,30 @@ def compute_features(df: pd.DataFrame, kind: str = "invariant") -> pd.DataFrame:
 
 
 # ---------------------------------------------------------------------------
-# Bruit de mesure — ce qui rend le problème statistique (notebook 08)
+# Measurement noise - what turns the problem into statistics (notebook 08)
 # ---------------------------------------------------------------------------
 
 
 def sigma_from_shots(n_shots: int) -> float:
     """
-    Écart-type du bruit d'estimation d'amplitude pour un budget de N mesures.
+    Standard deviation of the amplitude-estimation noise for a budget of N
+    measurements.
 
-    Modèle : σ = 1 / (2·√N).
+    Model: sigma = 1 / (2 * sqrt(N)).
 
-    Lecture : « sigma égale un sur deux racine de N ».
+    Reading: "sigma equals one over two square root of N".
 
-    Justification (modèle simplifié, assumé comme tel) : estimer une
-    amplitude à partir de N répétitions donne une erreur statistique en
-    1/√N — la loi universelle du bruit de grenaille (shot noise), la même
-    qui gouverne la précision d'une horloge atomique GNSS ou d'un
-    accéléromètre à atomes froids en fonction du temps d'intégration.
-    Le facteur 1/2 vient de p = |c|² : δp ≈ 2|c|·δc, et δp ~ √(p(1−p)/N)
-    donne δc ~ 1/(2√N) au voisinage des amplitudes typiques. L'ordre de
-    grandeur est ce qui compte : N contrôle la difficulté du problème.
+    Justification (simplified model, owned as such): estimating an
+    amplitude from N repetitions carries a statistical error scaling as
+    1/sqrt(N) - the universal shot-noise law, the same one that governs the
+    precision of a GNSS atomic clock or a cold-atom accelerometer as a
+    function of integration time. The 1/2 factor comes from p = |c|^2:
+    delta_p ~ 2|c| * delta_c, and delta_p ~ sqrt(p(1-p)/N) gives
+    delta_c ~ 1/(2 sqrt(N)) near typical amplitudes. The order of magnitude
+    is what matters: N controls the difficulty of the problem.
     """
     if n_shots <= 0:
-        raise ValueError(f"n_shots doit être > 0, reçu: {n_shots}")
+        raise ValueError(f"n_shots must be > 0, got: {n_shots}")
     return 1.0 / (2.0 * np.sqrt(n_shots))
 
 
@@ -268,33 +273,33 @@ def add_measurement_noise(
     seed: Optional[int] = None,
 ) -> pd.DataFrame:
     """
-    Simule une reconstruction tomographique à budget de mesures fini :
-    chaque composante réelle/imaginaire est observée avec un bruit gaussien
-    additif ĉᵢ = cᵢ + ε, ε ~ N(0, σ²), σ = 1/(2√N).
+    Simulate a finite-shot tomographic reconstruction: each real/imaginary
+    component is observed with additive Gaussian noise
+    c_hat_i = c_i + eps, eps ~ N(0, sigma^2), sigma = 1/(2 sqrt(N)).
 
-    Lecture : « c i estimé égale c i plus epsilon, epsilon suivant une
-    normale centrée d'écart-type sigma ».
+    Reading: "estimated c i equals c i plus epsilon, epsilon following a
+    centered normal of standard deviation sigma".
 
-    Pourquoi c'est LE bon cadre pour ce projet : sur amplitudes exactes,
-    valider ‖ψ‖² = 1 est un calcul, pas un apprentissage. Sur amplitudes
-    estimées, ‖ψ̂‖² fluctue autour de ‖ψ‖² avec une dispersion en 1/√N :
-    près de la frontière, les classes se chevauchent réellement, et décider
-    devient un problème statistique légitime (compromis faux positifs /
-    faux négatifs, seuil dépendant de N — voir notebook 08).
+    Why this is THE right frame for this project: on exact amplitudes,
+    checking ||psi||^2 = 1 is a computation, not learning. On estimated
+    amplitudes, ||psi_hat||^2 fluctuates around ||psi||^2 with a 1/sqrt(N)
+    spread: near the boundary the classes genuinely overlap, and deciding
+    becomes a legitimate statistical problem (false-positive/false-negative
+    trade-off, N-dependent threshold - see notebook 08).
 
-    Paramètres
+    Parameters
     ----------
-    df      : dataset au schéma standard (c{i}_real / c{i}_imag).
-    n_shots : budget de mesures N (grand N = peu de bruit = problème facile).
-    seed    : graine du générateur pour reproductibilité.
+    df      : dataset in the standard schema (c{i}_real / c{i}_imag).
+    n_shots : measurement budget N (large N = low noise = easy problem).
+    seed    : RNG seed for reproducibility.
 
-    Retourne
-    --------
-    Copie de ``df`` dont les colonnes d'amplitudes sont bruitées et dont la
-    colonne ``norm_squared`` (si présente) est recalculée sur les amplitudes
-    bruitées. La colonne ``is_valid`` reste le label VRAI (celui de l'état
-    sous-jacent) : c'est précisément ce qu'on demande au classifieur de
-    retrouver à travers le bruit.
+    Returns
+    -------
+    Copy of ``df`` with noisy amplitude columns and, if present, the
+    ``norm_squared`` column recomputed on the noisy amplitudes. The
+    ``is_valid`` column stays the TRUE label (of the underlying state):
+    that is precisely what the classifier is asked to recover through the
+    noise.
     """
     sigma = sigma_from_shots(n_shots)
     rng = np.random.default_rng(seed)
@@ -306,7 +311,7 @@ def add_measurement_noise(
         if c.startswith("c") and (c.endswith("_real") or c.endswith("_imag"))
     ]
     if not amp_cols:
-        raise ValueError("Aucune colonne d'amplitude c{i}_real / c{i}_imag trouvée.")
+        raise ValueError("No amplitude columns c{i}_real / c{i}_imag found.")
 
     noise = rng.normal(0.0, sigma, size=(len(df), len(amp_cols)))
     out[amp_cols] = df[amp_cols].to_numpy() + noise
@@ -323,52 +328,55 @@ def add_correlated_noise(
     seed: Optional[int] = None,
 ) -> pd.DataFrame:
     """
-    Bruit de mesure ÉQUICORRÉLÉ entre composantes : un mode commun par état
-    (jalon 4 — le régime où la statistique « norme estimée » cesse d'être
-    complète, et où l'apprentissage peut gagner sa place).
+    EQUICORRELATED measurement noise across components: one common mode per
+    state (milestone 4 - the regime where the "estimated norm" statistic
+    stops being complete, and where learning may earn its place).
 
-    Modèle
-    ------
-    Pour chaque état, chaque partie (réelle et imaginaire séparément) :
+    Model
+    -----
+    For each state, each part (real and imaginary separately):
 
-        εᵢ = σ·(√ρ · z + √(1−ρ) · wᵢ),   z ~ N(0,1) commun,  wᵢ ~ N(0,1) i.i.d.
+        eps_i = sigma * (sqrt(rho) * z + sqrt(1 - rho) * w_i),
+        z ~ N(0, 1) shared,  w_i ~ N(0, 1) iid.
 
-    Lecture : « epsilon i égale sigma fois racine de rho fois z, plus racine
-    de un moins rho fois w i » — z est le mode commun partagé par toutes les
-    composantes de l'état, wᵢ le bruit propre à chaque composante.
+    Reading: "epsilon i equals sigma times square root of rho times z, plus
+    square root of one minus rho times w i" - z is the common mode shared
+    by all components of the state, w_i the component-specific noise.
 
-    Propriétés (vérifiées par les tests) :
-    - Var(εᵢ) = σ² quel que soit ρ : à budget N fixé, le bruit par composante
-      est identique au cas i.i.d. — seule la STRUCTURE change ;
-    - Corr(εᵢ, εⱼ) = ρ pour i ≠ j.
+    Properties (locked by tests):
+    - Var(eps_i) = sigma^2 whatever rho: at fixed budget N, the
+      per-component noise is identical to the iid case - only the STRUCTURE
+      changes;
+    - Corr(eps_i, eps_j) = rho for i != j.
 
-    Physique du mode commun
-    -----------------------
-    Dans un instrument réel, une partie du bruit est partagée par toutes les
-    voies de mesure : vibration du porteur sur un interféromètre atomique,
-    fluctuation d'intensité du laser de lecture, dérive thermique de la
-    chaîne d'acquisition. Le bruit i.i.d. du notebook 08 est l'idéalisation ;
-    le mode commun est la réalité embarquée. Conséquence statistique : le
-    bruit sur ‖ψ̂‖² devient hétéroscédastique — sa variance dépend de l'état
-    (du terme (Σᵢcᵢ)², couplage signal-mode commun), ce qu'un seuil global
-    ne peut pas exploiter mais qu'un modèle disposant des coordonnées peut
-    apprendre.
+    Physics of the common mode
+    --------------------------
+    In a real instrument, part of the noise is shared by all measurement
+    channels: carrier vibration on an atom interferometer, intensity
+    fluctuation of the readout laser, thermal drift of the acquisition
+    chain. The iid noise of notebook 08 is the idealization; the common
+    mode is the embedded reality. Statistical consequence: the noise on
+    ||psi_hat||^2 becomes heteroscedastic - its variance depends on the
+    state through the (sum_i c_i)^2 signal/common-mode coupling, which a
+    global threshold cannot exploit but a model holding the coordinates
+    can, in principle, learn. (Measured verdict in notebook 09: it barely
+    matters - the 2d-component sum filters the common mode.)
 
-    Paramètres
+    Parameters
     ----------
-    df      : dataset au schéma standard.
-    n_shots : budget de mesures N (σ = 1/(2√N)).
-    rho     : corrélation entre composantes, 0 ≤ rho < 1 (0 = i.i.d.,
-              équivalent à add_measurement_noise).
-    seed    : graine de reproductibilité.
+    df      : dataset in the standard schema.
+    n_shots : measurement budget N (sigma = 1/(2 sqrt(N))).
+    rho     : cross-component correlation, 0 <= rho < 1 (0 = iid,
+              equivalent to add_measurement_noise).
+    seed    : RNG seed for reproducibility.
 
-    Retourne
-    --------
-    Copie bruitée de ``df`` (mêmes conventions que add_measurement_noise :
-    label conservé, norm_squared recalculée).
+    Returns
+    -------
+    Noisy copy of ``df`` (same conventions as add_measurement_noise:
+    label untouched, norm_squared recomputed).
     """
     if not (0.0 <= rho < 1.0):
-        raise ValueError(f"rho doit être dans [0, 1[, reçu: {rho}")
+        raise ValueError(f"rho must be in [0, 1), got: {rho}")
     sigma = sigma_from_shots(n_shots)
     rng = np.random.default_rng(seed)
     out = df.copy()
@@ -382,12 +390,12 @@ def add_correlated_noise(
         key=lambda c: int(c[1:-5]),
     )
     if not real_cols:
-        raise ValueError("Aucune colonne d'amplitude c{i}_real / c{i}_imag trouvée.")
+        raise ValueError("No amplitude columns c{i}_real / c{i}_imag found.")
 
     n, d = len(df), len(real_cols)
     for cols in (real_cols, imag_cols):
-        z = rng.normal(0.0, 1.0, size=(n, 1))  # mode commun par état
-        w = rng.normal(0.0, 1.0, size=(n, d))  # bruit propre
+        z = rng.normal(0.0, 1.0, size=(n, 1))  # per-state common mode
+        w = rng.normal(0.0, 1.0, size=(n, d))  # component-specific noise
         eps = sigma * (np.sqrt(rho) * z + np.sqrt(1.0 - rho) * w)
         out[cols] = df[cols].to_numpy() + eps
 
@@ -404,57 +412,56 @@ def add_calibration_drift(
     seed: Optional[int] = None,
 ) -> pd.DataFrame:
     """
-    Dérive de calibration lentement variable + bruit de mesure (jalon 4b —
-    le régime NON STATIONNAIRE, conçu pour mettre en échec tout seuil fixe).
+    Slowly varying calibration drift on top of shot noise (milestone 4b -
+    the NON-STATIONARY regime, designed to defeat any fixed threshold).
 
-    Modèle
-    ------
-    Chaque état porte un instant d'acquisition t (son index dans le
-    DataFrame). La chaîne de mesure a un gain qui dérive lentement :
+    Model
+    -----
+    Each state carries an acquisition time t (its index in the DataFrame).
+    The measurement chain has a slowly drifting gain:
 
-        g(t) = A·sin(2πt/T)
-        ĉᵢ(t) = (1 + g(t))·cᵢ + εᵢ,     εᵢ ~ N(0, σ²),  σ = 1/(2√N)
+        g(t) = A * sin(2*pi*t / T)
+        c_hat_i(t) = (1 + g(t)) * c_i + eps_i,   eps_i ~ N(0, sigma^2)
 
-    Lecture : « g de t égale A sinus de deux pi t sur T » ; « c-i-chapeau
-    égale un plus g de t, fois c-i, plus le bruit de grenaille ».
+    Reading: "g of t equals A sine of two pi t over T"; "estimated c i
+    equals one plus g of t, times c i, plus the shot noise".
 
-    Conséquence sur la norme : ‖ψ̂‖² ≈ (1+g(t))²·‖ψ‖². Un état VALIDE lu à
-    l'extrême de la dérive affiche (1±A)² ≈ 1±2A : avec A = 0.08, la norme
-    apparente balaie [0.85, 1.17] — bien au-delà de la bande de validité
-    ±0.05. Un seuil fixe, si bien calibré soit-il au temps t₀, devient
-    systématiquement faux ailleurs dans le cycle.
+    Consequence on the norm: ||psi_hat||^2 ~ (1 + g(t))^2 * ||psi||^2. A
+    VALID state read at the drift peak shows (1 +/- A)^2 ~ 1 +/- 2A: with
+    A = 0.08 the apparent norm sweeps [0.85, 1.17] - far outside the
+    +/-0.05 validity band. A fixed threshold, however well calibrated at
+    time t0, becomes systematically wrong elsewhere in the cycle.
 
-    Physique
-    --------
-    C'est LE problème central de l'instrumentation embarquée : dérive
-    thermique orbitale (cycle jour/nuit d'un satellite), vieillissement des
-    chaînes d'acquisition, fluctuation de la puissance du laser de lecture.
-    La réponse classique de l'ingénieur est la recalibration périodique ;
-    la réponse ML est d'apprendre la carte de calibration g(t) depuis les
-    données. Le notebook 10 confronte les deux.
+    Physics
+    -------
+    This is THE central problem of embedded instrumentation: orbital
+    thermal cycling (a satellite's day/night cycle), ageing acquisition
+    chains, readout-laser power drift. The classic engineering answer is
+    periodic recalibration; the ML answer is to learn the calibration map
+    g(t) from data. Notebook 10 confronts the two (winner: the hybrid).
 
-    Paramètres
+    Parameters
     ----------
-    df              : dataset au schéma standard (l'ordre des lignes définit
-                      le temps d'acquisition).
-    n_shots         : budget de mesures N (bruit de grenaille σ = 1/(2√N)).
-    drift_amplitude : A, amplitude relative de la dérive de gain (ex. 0.08
-                      = ±8 %). Doit vérifier |A| < 1.
-    drift_period    : T, période de la dérive en nombre d'états acquis.
-    seed            : graine de reproductibilité (bruit de grenaille).
+    df              : dataset in the standard schema (row order defines the
+                      acquisition time).
+    n_shots         : measurement budget N (shot noise sigma = 1/(2 sqrt(N))).
+    drift_amplitude : A, relative gain-drift amplitude (e.g. 0.08 = +/-8%).
+                      Must satisfy |A| < 1.
+    drift_period    : T, drift period in number of acquired states.
+    seed            : RNG seed (shot noise) for reproducibility.
 
-    Retourne
-    --------
-    Copie de ``df`` avec colonne ``acquisition_time`` (t), amplitudes
-    dérivées+bruitées, ``norm_squared`` recalculée. Label inchangé : la
-    validité est celle de l'état SOUS-JACENT, pas de sa lecture dérivée.
+    Returns
+    -------
+    Copy of ``df`` with an ``acquisition_time`` column (t), drifted+noisy
+    amplitudes, and ``norm_squared`` recomputed. Label untouched: validity
+    is that of the UNDERLYING state, not of its drifted reading.
     """
     if not (abs(drift_amplitude) < 1.0):
         raise ValueError(
-            f"drift_amplitude doit vérifier |A| < 1, reçu: {drift_amplitude}"
+            f"drift_amplitude must satisfy |A| < 1, got: {drift_amplitude}"
         )
     if drift_period <= 0:
-        raise ValueError(f"drift_period doit être > 0, reçu: {drift_period}")
+        raise ValueError(f"drift_period must be > 0, got: {drift_period}")
 
     sigma = sigma_from_shots(n_shots)
     rng = np.random.default_rng(seed)
@@ -466,7 +473,7 @@ def add_calibration_drift(
         if c.startswith("c") and (c.endswith("_real") or c.endswith("_imag"))
     ]
     if not amp_cols:
-        raise ValueError("Aucune colonne d'amplitude c{i}_real / c{i}_imag trouvée.")
+        raise ValueError("No amplitude columns c{i}_real / c{i}_imag found.")
 
     n = len(df)
     t = np.arange(n, dtype=float)
