@@ -6,6 +6,9 @@ versionnement [SemVer](https://semver.org/lang/fr/).
 ## [Non publié]
 
 ### Ajouté
+- Phase finale : l'intégralité du code (`src/qsv/` et `tests/`) est
+  désormais en anglais — data_generation traduit avec preuve par hash MD5
+  du dataset régénéré, 57 tests verts
 - Phase finale : notebook 13 `13_project_report.ipynb` (EN, exécuté) —
   rapport de projet complet avec retour d'expérience des erreurs réelles
   à la première personne ; `qsv/features.py` traduit en anglais (57 tests

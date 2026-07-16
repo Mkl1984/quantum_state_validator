@@ -1,4 +1,4 @@
-"""Rend le paquet ``src`` importable depuis les tests, quel que soit le cwd."""
+"""Make the ``qsv`` package importable from the tests, whatever the cwd."""
 
 import sys
 from pathlib import Path

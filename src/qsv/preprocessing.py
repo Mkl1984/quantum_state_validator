@@ -1,7 +1,7 @@
 """
 Module: preprocessing.py
-Objectif: Préparation des données pour ML
-Auteur: Mkl Zenin
+Purpose: data preparation for ML
+Author: Mkl Zenin
 Date: 2024-11-17
 """
 
@@ -25,11 +25,12 @@ def prepare_features_and_target(
     include_norm_squared: bool = False,
 ) -> Tuple[pd.DataFrame, pd.Series]:
     """
-    Sépare features X et target y.
+    Split features X and target y.
 
     IMPORTANT:
-    - Si include_norm_squared=False : vrai challenge
-    - Si include_norm_squared=True : tâche facile
+    - include_norm_squared=False: the honest setting (but see notebooks
+      07-08 - on exact data even the raw coordinates determine the label)
+    - include_norm_squared=True: the trivial task
     """
 
     if exclude_cols is None:
@@ -57,20 +58,20 @@ def split_data(
     random_state: int = 42,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.Series, pd.Series, pd.Series]:
     """
-    Split en train/val/test avec stratification.
+    Train/val/test split with stratification.
     """
 
     stratify_y = y if stratify else None
 
-    # Premier split : train+val vs test
+    # First split: train+val vs test
     X_temp, X_test, y_temp, y_test = train_test_split(
         X, y, test_size=test_size, stratify=stratify_y, random_state=random_state
     )
 
-    # Ajustement du ratio pour val
+    # Adjust the ratio for the validation set
     val_size_adjusted = val_size / (1 - test_size)
 
-    # Second split : train vs val
+    # Second split: train vs val
     X_train, X_val, y_train, y_val = train_test_split(
         X_temp,
         y_temp,
@@ -79,7 +80,7 @@ def split_data(
         random_state=random_state,
     )
 
-    logger.info(f"Split effectué:")
+    logger.info(f"Split done:")
     logger.info(f"  Train: {len(X_train)} ({len(X_train)/len(X)*100:.1f}%)")
     logger.info(f"  Val:   {len(X_val)} ({len(X_val)/len(X)*100:.1f}%)")
     logger.info(f"  Test:  {len(X_test)} ({len(X_test)/len(X)*100:.1f}%)")
@@ -96,29 +97,30 @@ def scale_features(
     scaler_path: str = "models/scaler.joblib",
 ):
     """
-    Normalise les features : fit sur train UNIQUEMENT, transform sur val/test
-    (aucune fuite d'information des ensembles d'évaluation vers le scaler).
+    Scale the features: fit on train ONLY, transform on val/test (no
+    information leaks from the evaluation sets into the scaler).
 
-    Paramètres
+    Parameters
     ----------
     method : "standard" | "minmax" | "robust"
-        - "standard" : z = (x − μ)/σ. Lecture : « x moins la moyenne, divisé
-          par l'écart-type ». Sensible aux outliers (μ et σ le sont).
-        - "minmax"   : z = (x − min)/(max − min), résultat dans [0, 1].
-          Très sensible aux outliers (un seul extrême écrase tout le reste).
-        - "robust"   : z = (x − médiane)/IQR (écart interquartile).
-          Recommandé pour ce projet : les features à queues lourdes
-          (purity_raw ~ 10⁸ sur les états extrêmes) détruisent μ et σ,
-          mais laissent médiane et quartiles quasi intacts — c'est
-          précisément la pathologie observée au notebook 08 (effondrement
-          de la régression logistique).
+        - "standard": z = (x - mu) / sigma. Reading: "x minus the mean,
+          divided by the standard deviation". Outlier-sensitive (both mu
+          and sigma are).
+        - "minmax": z = (x - min) / (max - min), result in [0, 1]. Very
+          outlier-sensitive (a single extreme crushes everything else).
+        - "robust": z = (x - median) / IQR (interquartile range).
+          Recommended for this project: the heavy-tailed features
+          (purity_raw up to ~1e8 on extreme states) destroy mu and sigma
+          but leave the median and quartiles nearly intact - precisely the
+          pathology observed in notebook 08 (the logistic-regression
+          collapse).
 
-    Rappel : le scaling est requis pour les modèles à géométrie métrique ou
-    à gradient (régression logistique, SVM, k-NN, réseaux). Les arbres et
-    forêts y sont insensibles (invariance par transformation monotone).
+    Reminder: scaling is required for metric- or gradient-based models
+    (logistic regression, SVM, k-NN, neural networks). Trees and forests
+    are insensitive to it (invariance under monotone transformations).
 
-    Retourne
-    --------
+    Returns
+    -------
     (X_train_scaled, X_val_scaled, X_test_scaled, scaler)
     """
     from sklearn.preprocessing import MinMaxScaler, RobustScaler
@@ -129,13 +131,13 @@ def scale_features(
         "robust": RobustScaler,
     }
     if method not in scalers:
-        raise ValueError(f"method '{method}' inconnue. Choix : {sorted(scalers)}")
+        raise ValueError(f"Unknown method '{method}'. Choices: {sorted(scalers)}")
     scaler = scalers[method]()
 
-    # FIT sur train uniquement
+    # FIT on train only
     scaler.fit(X_train)
 
-    # TRANSFORM sur tous
+    # TRANSFORM on all sets
     X_train_scaled = pd.DataFrame(
         scaler.transform(X_train), columns=X_train.columns, index=X_train.index
     )
@@ -148,29 +150,29 @@ def scale_features(
         scaler.transform(X_test), columns=X_test.columns, index=X_test.index
     )
 
-    logger.info(f"Normalisation effectuée ({method})")
+    logger.info(f"Scaling done ({method})")
     logger.info(
-        f"  Train - μ: {X_train_scaled.mean().mean():.6f}, σ: {X_train_scaled.std().mean():.6f}"
+        f"  Train - mean: {X_train_scaled.mean().mean():.6f}, std: {X_train_scaled.std().mean():.6f}"
     )
 
     if save_scaler:
         scaler_file = Path(scaler_path)
         scaler_file.parent.mkdir(parents=True, exist_ok=True)
         joblib.dump(scaler, scaler_file)
-        logger.info(f"  Scaler sauvegardé: {scaler_file}")
+        logger.info(f"  Scaler saved: {scaler_file}")
 
     return X_train_scaled, X_val_scaled, X_test_scaled, scaler
 
 
-# Test si exécuté directement
+# Self-test when run directly
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(message)s")
-    logger.info("Test du module preprocessing.py")
+    logger.info("Testing the preprocessing module")
 
-    # Import du module de génération
+    # Import the generation module
     from qsv.data_generation import load_dataset
 
-    # Charge le dataset
+    # Load the dataset
     df = load_dataset()
 
     # Test
@@ -181,4 +183,4 @@ if __name__ == "__main__":
 
     X_train_sc, X_val_sc, X_test_sc, scaler = scale_features(X_train, X_val, X_test)
 
-    logger.info("\n Module preprocessing fonctionnel!")
+    logger.info("\n Preprocessing module functional!")

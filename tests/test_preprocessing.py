@@ -1,6 +1,6 @@
 """
-Tests du module src/preprocessing.py — split stratifié et absence de
-fuite train→val/test dans le scaling.
+Tests for qsv/preprocessing.py - stratified splits and the absence of
+train -> val/test leakage in the scaling.
 """
 
 import numpy as np
@@ -30,17 +30,17 @@ def test_split_proportions_and_stratification(xy):
     assert len(X_tr) == pytest.approx(0.6 * n, abs=2)
     assert len(X_val) == pytest.approx(0.2 * n, abs=2)
     assert len(X_te) == pytest.approx(0.2 * n, abs=2)
-    # Stratification : proportion de valides conservée à ±2 % dans chaque split
+    # Stratification: valid share preserved within +/-2% in every split
     for split in (y_tr, y_val, y_te):
         assert split.mean() == pytest.approx(y.mean(), abs=0.02)
-    # Pas de chevauchement d'indices entre les splits
+    # No index overlap between the splits
     assert set(X_tr.index).isdisjoint(X_val.index)
     assert set(X_tr.index).isdisjoint(X_te.index)
     assert set(X_val.index).isdisjoint(X_te.index)
 
 
 def test_scaler_fits_on_train_only(xy, tmp_path):
-    """Le scaler doit être ajusté sur train UNIQUEMENT (pas de fuite)."""
+    """The scaler must be fitted on train ONLY (no leakage)."""
     X, y = xy
     X_tr, X_val, X_te, *_ = split_data(X, y, random_state=0)
     X_tr_s, X_val_s, X_te_s, scaler = scale_features(
@@ -50,20 +50,20 @@ def test_scaler_fits_on_train_only(xy, tmp_path):
         save_scaler=True,
         scaler_path=str(tmp_path / "scaler.joblib"),
     )
-    # Train standardisé : moyenne ≈ 0, écart-type ≈ 1
+    # Standardized train: mean ~ 0, std ~ 1
     np.testing.assert_allclose(X_tr_s.mean(), 0.0, atol=1e-10)
     np.testing.assert_allclose(X_tr_s.std(ddof=0), 1.0, atol=1e-10)
-    # Les paramètres du scaler proviennent du train, pas de val/test
+    # Scaler parameters come from train, not from val/test
     np.testing.assert_allclose(scaler.mean_, X_tr.mean().to_numpy(), rtol=1e-10)
-    # Val/test transformés avec les stats du train → moyenne ≠ 0 en général
+    # Val/test transformed with train statistics -> mean != 0 in general
     assert (tmp_path / "scaler.joblib").exists()
-    # Colonnes et index préservés
+    # Columns and index preserved
     assert list(X_val_s.columns) == list(X_val.columns)
     assert (X_val_s.index == X_val.index).all()
 
 
 def test_scale_features_methods(xy):
-    """Q3 : les trois méthodes de scaling sont réelles et distinctes."""
+    """Q3: the three scaling methods are real and distinct."""
     from qsv.preprocessing import scale_features, split_data
 
     X, y = xy
@@ -81,10 +81,10 @@ def test_scale_features_methods(xy):
                 {"standard": "standard", "minmax": "minmax", "robust": "robust"}[method]
             )
         )
-    # minmax borne dans [0, 1]
+    # minmax bounded in [0, 1]
     assert outs["minmax"].min().min() >= -1e-12
     assert outs["minmax"].max().max() <= 1 + 1e-12
-    # les méthodes produisent des résultats différents
+    # the methods produce different outputs
     assert not outs["standard"].equals(outs["robust"])
     import pytest as _pt
 

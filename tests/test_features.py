@@ -1,8 +1,8 @@
 """
-Tests du module src/features.py.
+Tests for qsv/features.py.
 
-Le test le plus important est ``test_invariant_features_are_scale_invariant`` :
-il vérifie mécaniquement la propriété qui empêche le target leakage.
+The most important test is ``test_invariant_features_are_scale_invariant``:
+it mechanically verifies the property that prevents target leakage.
 """
 
 import numpy as np
@@ -35,7 +35,7 @@ def test_extract_amplitudes_roundtrip(small_dataset):
     states = extract_amplitudes(small_dataset)
     assert states.shape == (400, 4)
     assert states.dtype == complex
-    # La colonne norm_squared du dataset doit correspondre au recalcul
+    # The dataset's norm_squared column must match the recomputation
     np.testing.assert_allclose(
         norm_squared(states), small_dataset["norm_squared"].to_numpy(), rtol=1e-10
     )
@@ -47,12 +47,12 @@ def test_extract_amplitudes_missing_columns():
 
 
 # ---------------------------------------------------------------------------
-# Invariance d'échelle — LE test anti-leakage
+# Scale invariance - THE anti-leakage test
 # ---------------------------------------------------------------------------
 
 
 def test_invariant_features_are_scale_invariant():
-    """c → k·c ne doit changer AUCUNE feature invariante."""
+    """c -> k*c must change NO invariant feature."""
     states = generate_valid_states(100, dim=4, strategy="random", seed=7)
     for k in (0.1, 0.5, 2.0, 37.0):
         f_base = scale_invariant_features(states)
@@ -61,22 +61,22 @@ def test_invariant_features_are_scale_invariant():
 
 
 def test_sensitive_features_do_leak_the_norm():
-    """Contre-épreuve : les features sensibles DOIVENT changer sous c → k·c."""
+    """Counter-check: sensitive features MUST change under c -> k*c."""
     states = generate_valid_states(50, dim=4, strategy="random", seed=7)
     f_base = scale_sensitive_features(states)
     f_scaled = scale_sensitive_features(2.0 * states)
-    # norm_squared quadruple exactement (k² = 4)
+    # norm_squared exactly quadruples (k^2 = 4)
     np.testing.assert_allclose(
         f_scaled["norm_squared"], 4.0 * f_base["norm_squared"], rtol=1e-10
     )
-    # purity_raw est multipliée par k⁴ = 16
+    # purity_raw is multiplied by k^4 = 16
     np.testing.assert_allclose(
         f_scaled["purity_raw"], 16.0 * f_base["purity_raw"], rtol=1e-10
     )
 
 
 def test_invariant_features_bounds():
-    """H ∈ [0, ln d], pureté ∈ [1/d, 1], participation ∈ [1, d], max_prob ∈ [1/d, 1]."""
+    """H in [0, ln d], purity in [1/d, 1], participation in [1, d], max_prob in [1/d, 1]."""
     states = generate_valid_states(500, dim=4, strategy="dirichlet", seed=3)
     f = scale_invariant_features(states)
     d = 4
@@ -91,7 +91,7 @@ def test_invariant_features_bounds():
 
 
 def test_basis_states_extreme_values():
-    """État de base pur : H = 0, pureté = 1, participation = 1, max_prob = 1."""
+    """Pure basis state: H = 0, purity = 1, participation = 1, max_prob = 1."""
     states = generate_valid_states(10, dim=4, strategy="basis", seed=1)
     f = scale_invariant_features(states)
     np.testing.assert_allclose(f["entropy_shannon"], 0.0, atol=1e-8)
@@ -100,7 +100,7 @@ def test_basis_states_extreme_values():
 
 
 def test_near_zero_state_falls_back_to_uniform():
-    """État quasi nul : renormalisation impossible → distribution uniforme."""
+    """Near-null state: renormalization impossible -> uniform distribution."""
     states = np.full((1, 4), 1e-15 + 0j)
     f = scale_invariant_features(states)
     np.testing.assert_allclose(f["purity_normalized"].iloc[0], 0.25, atol=1e-6)
@@ -116,18 +116,18 @@ def test_compute_features_kinds(small_dataset):
     sen = compute_features(small_dataset, kind="sensitive")
     both = compute_features(small_dataset, kind="all")
     assert list(both.columns) == list(inv.columns) + list(sen.columns)
-    assert "norm_deviation" not in inv.columns  # pas de fuite côté invariant
+    assert "norm_deviation" not in inv.columns  # no leak on the invariant side
     with pytest.raises(ValueError):
         compute_features(small_dataset, kind="magic")
 
 
 # ---------------------------------------------------------------------------
-# Bruit de mesure
+# Measurement noise
 # ---------------------------------------------------------------------------
 
 
 def test_sigma_from_shots_scaling():
-    """σ suit la loi 1/√N : quadrupler N divise σ par 2."""
+    """sigma follows the 1/sqrt(N) law: quadrupling N halves sigma."""
     assert sigma_from_shots(400) == pytest.approx(sigma_from_shots(100) / 2)
     with pytest.raises(ValueError):
         sigma_from_shots(0)
@@ -135,40 +135,40 @@ def test_sigma_from_shots_scaling():
 
 def test_add_measurement_noise_properties(small_dataset):
     noisy = add_measurement_noise(small_dataset, n_shots=1000, seed=0)
-    # Le label n'est pas touché
+    # The label is untouched
     pd.testing.assert_series_equal(noisy["is_valid"], small_dataset["is_valid"])
-    # Les amplitudes ont bougé
+    # The amplitudes moved
     assert not np.allclose(
         noisy["c0_real"].to_numpy(), small_dataset["c0_real"].to_numpy()
     )
-    # norm_squared recalculée sur amplitudes bruitées
+    # norm_squared recomputed on the noisy amplitudes
     np.testing.assert_allclose(
         noisy["norm_squared"].to_numpy(),
         norm_squared(extract_amplitudes(noisy)),
         rtol=1e-10,
     )
-    # Reproductibilité par graine
+    # Seed reproducibility
     noisy2 = add_measurement_noise(small_dataset, n_shots=1000, seed=0)
     pd.testing.assert_frame_equal(noisy, noisy2)
 
 
 def test_noise_shrinks_with_budget(small_dataset):
-    """Grand N → ‖ψ̂‖² concentrée près de ‖ψ‖² ; petit N → dispersée."""
+    """Large N -> ||psi_hat||^2 concentrated near ||psi||^2; small N -> spread."""
     base = small_dataset["norm_squared"].to_numpy()
     err = {}
     for n in (100, 10_000):
         noisy = add_measurement_noise(small_dataset, n_shots=n, seed=1)
         err[n] = np.abs(noisy["norm_squared"].to_numpy() - base).mean()
-    assert err[10_000] < err[100] / 3  # ~×10 attendu, ×3 avec marge large
+    assert err[10_000] < err[100] / 3  # ~x10 expected, x3 with wide margin
 
 
 # ---------------------------------------------------------------------------
-# Bruit corrélé (jalon 4)
+# Correlated noise (milestone 4)
 # ---------------------------------------------------------------------------
 
 
 def test_correlated_noise_structure(small_dataset):
-    """Corr(εᵢ, εⱼ) ≈ ρ hors diagonale, Var(εᵢ) ≈ σ² inchangée."""
+    """Corr(eps_i, eps_j) ~ rho off-diagonal, Var(eps_i) ~ sigma^2 unchanged."""
     from qsv.features import add_correlated_noise
 
     rho, n_shots = 0.8, 50
@@ -183,7 +183,7 @@ def test_correlated_noise_structure(small_dataset):
 
 
 def test_correlated_noise_rho_zero_is_iid(small_dataset):
-    """ρ = 0 : corrélation hors diagonale ≈ 0 (équivalent i.i.d.)."""
+    """rho = 0: off-diagonal correlation ~ 0 (equivalent to iid)."""
     from qsv.features import add_correlated_noise
 
     noisy = add_correlated_noise(small_dataset, n_shots=100, rho=0.0, seed=3)
@@ -203,12 +203,12 @@ def test_correlated_noise_validation(small_dataset):
 
 
 # ---------------------------------------------------------------------------
-# Dérive de calibration (jalon 4b)
+# Calibration drift (milestone 4b)
 # ---------------------------------------------------------------------------
 
 
 def test_calibration_drift_structure(small_dataset):
-    """Le gain suit A·sin(2πt/T) : vérifiable sur les états valides."""
+    """The gain follows A*sin(2*pi*t/T): verifiable on the valid states."""
     from qsv.features import add_calibration_drift
 
     A, T = 0.1, 100.0
@@ -216,9 +216,9 @@ def test_calibration_drift_structure(small_dataset):
         small_dataset, n_shots=100_000, drift_amplitude=A, drift_period=T, seed=0
     )
     assert "acquisition_time" in drifted.columns
-    # Bruit de grenaille quasi nul (N énorme) : ‖ψ̂‖² ≈ (1+g(t))²·‖ψ‖².
-    # Vérifié sur les états VALIDES uniquement : pour les états extrêmes
-    # quasi nuls (‖ψ‖² ~ 1e-4), le ratio bruit/norme diverge par construction.
+    # Near-zero shot noise (huge N): ||psi_hat||^2 ~ (1+g(t))^2 * ||psi||^2.
+    # Verified on VALID states only: for near-null extreme states
+    # (||psi||^2 ~ 1e-4) the noise/norm ratio diverges by construction.
     t = drifted["acquisition_time"].to_numpy()
     expected_gain2 = (1 + A * np.sin(2 * np.pi * t / T)) ** 2
     mask = small_dataset["is_valid"].to_numpy() == 1
@@ -226,7 +226,7 @@ def test_calibration_drift_structure(small_dataset):
         small_dataset["norm_squared"].to_numpy()[mask] * expected_gain2[mask]
     )
     np.testing.assert_allclose(ratio, 1.0, atol=5e-2)
-    # Label inchangé
+    # Label untouched
     pd.testing.assert_series_equal(drifted["is_valid"], small_dataset["is_valid"])
 
 

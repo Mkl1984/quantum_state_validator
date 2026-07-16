@@ -1,15 +1,15 @@
 """
 Module: paths.py
-Objectif: Chemins ancrés sur la racine du projet, indépendants du cwd.
+Purpose: project-root-anchored paths, independent of the current working
+directory.
 
-Pourquoi ce module existe (audit A1)
-------------------------------------
-Les chemins relatifs comme ``"data/processed"`` dépendent du répertoire
-courant au moment de l'exécution. Exécutés depuis ``notebooks/``, ils ont
-créé un duplicata du dataset (1,8 Mo) et un dossier ``notebooks/models/``
-parasites. Ce module ancre tous les chemins sur la racine du dépôt,
-déterminée à partir de l'emplacement de ce fichier — invariant, lui,
-quel que soit le cwd.
+Why this module exists (audit A1)
+---------------------------------
+Relative paths like ``"data/processed"`` depend on the working directory
+at execution time. Run from ``notebooks/``, they created a duplicate of
+the dataset (1.8 MB) and a stray ``notebooks/models/`` folder. This module
+anchors every path on the repository root, derived from this file's own
+location - which is invariant whatever the cwd.
 
 Usage
 -----
@@ -32,5 +32,5 @@ MODELS_DIR: Path = PROJECT_ROOT / "models"
 FIGURES_DIR: Path = PROJECT_ROOT / "figures"
 REPORTS_DIR: Path = PROJECT_ROOT / "reports"
 
-#: Dataset principal (10 000 états, dim=4, équilibré 50/50).
+#: Main dataset (10,000 states, dim=4, balanced 50/50).
 MAIN_DATASET: Path = DATA_PROCESSED / "quantum_states_10000.csv"

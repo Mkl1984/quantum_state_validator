@@ -21,3 +21,14 @@ or a commit. Nothing invented, as per the project conventions.
 Remaining translation checklist (data_generation, preprocessing, README, notebooks
 01-10 markdown), then tag v0.5.0 once the Emergent web app (milestone 5c, in progress)
 is reviewed against qsv/validators.py. Progress: ~98.5%.
+
+## Addendum — part 2 (same day): the whole codebase is now English
+
+- `qsv/data_generation.py` translated with the strongest possible proof that the
+  logic is untouched: the dataset regenerated with seed=42 before and after the
+  translation has the **same MD5 hash** (bb787d3f...965).
+- `qsv/preprocessing.py`, `qsv/paths.py`, `tests/conftest.py` and the three
+  French-commented test files translated; 57 tests collected and green before and
+  after; zero accented characters remain anywhere in `src/qsv/` or `tests/`.
+- Remaining in the checklist: README.md, notebooks 01-06 (slim down + translate),
+  notebooks 07-10 markdown, CONTRIBUTING/data-README/ROADMAP/CHANGELOG.

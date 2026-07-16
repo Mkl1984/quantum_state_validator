@@ -76,8 +76,10 @@ EDA avancée (Plotly 3D, simplex), split stratifié 60/20/20, scaling sans fuite
   nés en anglais (validators, api, preparation).
 
 **Checklist de traduction restante** (ordre de priorité) :
-- [ ] `qsv/data_generation.py` (docstrings/commentaires FR)
-- [ ] `qsv/preprocessing.py`, `qsv/paths.py`, `tests/` (docstrings FR)
+- [x] `qsv/data_generation.py` — traduit, **dataset régénéré au hash MD5
+  identique** (preuve que la logique est intacte)
+- [x] `qsv/preprocessing.py`, `qsv/paths.py`, `tests/` — traduits, 57 tests
+  collectés et verts, zéro caractère accentué restant dans le code
 - [ ] `README.md` (FR → EN intégral)
 - [ ] Notebooks 01-06 : alléger le markdown (convention « notebooks de code
   sobres ») + traduire les commentaires + ré-exécuter
