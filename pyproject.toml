@@ -21,6 +21,9 @@ dependencies = [
 api = ["fastapi>=0.110.0", "uvicorn>=0.29.0"]
 dev = ["pytest>=7.4.0", "httpx>=0.27.0", "black>=23.0.0"]
 
+[project.scripts]
+qsv = "qsv.cli:main"
+
 [project.urls]
 Repository = "https://github.com/Mkl1984/quantum_state_validator"
 Changelog = "https://github.com/Mkl1984/quantum_state_validator/blob/main/CHANGELOG.md"
