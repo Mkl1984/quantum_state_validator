@@ -6,6 +6,11 @@ versionnement [SemVer](https://semver.org/lang/fr/).
 ## [Non publié]
 
 ### Ajouté
+- P0 : `qsv.density` — validation des matrices densité (hermiticité, trace
+  unité, positivité) en modes exact et tomographique bruité ; seuils
+  calibrés empiriquement (3600 essais) ; générateurs Ginibre + causes
+  d'invalidité à violation garantie ; pont `from_state_vector` ; notebook 14
+  (code-only) + section doc dans le 13 ; 13 nouveaux tests (total 81)
 - P0 distribution : `qsv.adapters` (conversion duck-typée Qiskit/PennyLane/
   Cirq vers le cœur de décision — aucune dépendance framework), CLI
   `qsv validate` (fichiers .npy/.csv, codes de sortie 0/1/2 pour la CI,

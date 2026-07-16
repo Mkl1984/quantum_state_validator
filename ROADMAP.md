@@ -114,8 +114,10 @@ EDA avancée (Plotly 3D, simplex), split stratifié 60/20/20, scaling sans fuite
 PennyLane/Cirq par duck-typing, zéro dépendance framework), ✅ CLI
 `qsv validate` (npy/csv, codes de sortie type pytest — le garde-fou CI),
 ✅ artefacts PyPI 0.5.0 construits et vérifiés (twine PASSED) — publication
-en attente du tag v0.5.0 (voir docs/RELEASING.md). Restent en P0 :
-`qsv.tomography` (multinomial) et `qsv.density` (matrices densité).
+en attente du tag v0.5.0 (voir docs/RELEASING.md). ✅ `qsv.density`
+(hermiticité/trace/positivité, mode bruité calibré empiriquement — le fait
+tomographique des petites valeurs propres négatives est géré, notebook 14).
+Reste en P0 : `qsv.tomography` (multinomial).
 
 **5a (fait)** : ✅ API FastAPI (`src/api.py`, EN) — décision d'architecture
 issue du jalon 4 : l'API sert les validateurs GAGNANTS (test à seuil corrigé
