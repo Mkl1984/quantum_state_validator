@@ -6,6 +6,11 @@ versionnement [SemVer](https://semver.org/lang/fr/).
 ## [Non publié]
 
 ### Ajouté
+- P0 distribution : `qsv.adapters` (conversion duck-typée Qiskit/PennyLane/
+  Cirq vers le cœur de décision — aucune dépendance framework), CLI
+  `qsv validate` (fichiers .npy/.csv, codes de sortie 0/1/2 pour la CI,
+  sortie JSON), artefacts PyPI construits et vérifiés, docs/RELEASING.md ;
+  11 nouveaux tests (total 68)
 - Phase finale : les 13 notebooks sont en anglais — 01-06 reconstruits
   sobres (convention « implémentation seule »), 07 archivé avec
   avertissement EN et sorties d'époque, 08-10 retraduits et ré-exécutés

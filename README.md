@@ -219,6 +219,22 @@ curl -X POST http://localhost:8000/validate \
 
 The service is a client of the library: a Python pipeline can import `qsv` directly while a remote application queries the same logic over HTTP - the two verdicts cannot diverge, by construction.
 
+### Bonus: framework adapters and the CI guardrail
+
+```python
+from qsv.adapters import validate, preparation
+validate(qiskit_statevector)          # Qiskit Statevector (duck-typed .data)
+validate(circuit_fn(params))          # PennyLane / Cirq (plain ndarrays)
+```
+
+```bash
+qsv validate states.npy --n-shots 500   # exit 0 = all valid, 1 = failures
+qsv validate dataset.csv --json         # machine-readable report
+```
+
+The exit-code semantics turn any pipeline into a gated one - add a single
+`qsv validate` line to your CI and normalization drift can never land again.
+
 ---
 
 ## Theoretical Foundations
