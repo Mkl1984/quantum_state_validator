@@ -80,7 +80,7 @@ EDA avancée (Plotly 3D, simplex), split stratifié 60/20/20, scaling sans fuite
   identique** (preuve que la logique est intacte)
 - [x] `qsv/preprocessing.py`, `qsv/paths.py`, `tests/` — traduits, 57 tests
   collectés et verts, zéro caractère accentué restant dans le code
-- [ ] `README.md` (FR → EN intégral)
+- [x] `README.md` — traduit intégralement (580 lignes, structure et 25 références préservées)
 - [ ] Notebooks 01-06 : alléger le markdown (convention « notebooks de code
   sobres ») + traduire les commentaires + ré-exécuter
 - [ ] Notebooks 07-10 : markdown FR → EN + ré-exécution (figures avec

@@ -6,6 +6,8 @@ versionnement [SemVer](https://semver.org/lang/fr/).
 ## [Non publié]
 
 ### Ajouté
+- Phase finale : README traduit intégralement en anglais (580 lignes,
+  structure, résultats et 25 références préservés)
 - Phase finale : l'intégralité du code (`src/qsv/` et `tests/`) est
   désormais en anglais — data_generation traduit avec preuve par hash MD5
   du dataset régénéré, 57 tests verts

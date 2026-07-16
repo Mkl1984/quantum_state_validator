@@ -32,3 +32,13 @@ is reviewed against qsv/validators.py. Progress: ~98.5%.
   after; zero accented characters remain anywhere in `src/qsv/` or `tests/`.
 - Remaining in the checklist: README.md, notebooks 01-06 (slim down + translate),
   notebooks 07-10 markdown, CONTRIBUTING/data-README/ROADMAP/CHANGELOG.
+
+## Addendum — part 3: README fully in English
+
+Full translation (580 lines): description with the honest ML framing, key-results
+table, architecture tree (now listing all 13 notebooks), installation, the two usage
+modes, theoretical foundations (including the Shannon-vs-von-Neumann precision), the
+six aerospace application domains, the 25 references, milestone-status roadmap
+summary, technologies, contributing summary, license and citation (year updated to
+2026). Remaining in the checklist: notebooks 01-06 (slim down + translate), notebooks
+07-10 markdown, CONTRIBUTING/data-README.
