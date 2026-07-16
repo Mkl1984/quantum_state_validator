@@ -81,11 +81,16 @@ EDA avancée (Plotly 3D, simplex), split stratifié 60/20/20, scaling sans fuite
 - [x] `qsv/preprocessing.py`, `qsv/paths.py`, `tests/` — traduits, 57 tests
   collectés et verts, zéro caractère accentué restant dans le code
 - [x] `README.md` — traduit intégralement (580 lignes, structure et 25 références préservées)
-- [ ] Notebooks 01-06 : alléger le markdown (convention « notebooks de code
-  sobres ») + traduire les commentaires + ré-exécuter
-- [ ] Notebooks 07-10 : markdown FR → EN + ré-exécution (figures avec
-  labels FR à refaire)
-- [ ] CONTRIBUTING.md, data/README.md, ROADMAP.md, CHANGELOG.md
+- [x] Notebooks 01-06 : reconstruits sobres et en anglais (versions FR dans
+  l'historique Git), ré-exécutés — le 04 reproduit toujours le CSV octet
+  pour octet
+- [x] Notebooks 07-10 : avertissement du 07 traduit (sorties d'époque
+  préservées comme archive) ; 08-10 retraduits et ré-exécutés — chiffres
+  identiques (seeds déterministes)
+- [x] CONTRIBUTING.md, data/README.md — traduits et mis à jour (la note
+  périmée « norm_squared utile pour le ML » devient l'avertissement leakage)
+- Note : ROADMAP.md et CHANGELOG.md restent en français — documents de
+  pilotage interne, à traduire en dernier si souhaité.
 - Note : les rapports de session dans reports/ antérieurs au 2026-07-08
   restent en français — ce sont des archives historiques datées.
 

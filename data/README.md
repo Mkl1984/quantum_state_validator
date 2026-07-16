@@ -1,128 +1,112 @@
-# Données du Projet Quantum State Validator
+# Quantum State Validator - Data
 
-## Structure
+## Main dataset
 
-## Dataset Principal
-
-**Fichier :** `processed/quantum_states_dataset.csv`
+**File:** `processed/quantum_states_10000.csv`
 
 ### Description
 
-Dataset synthétique d'états quantiques pour classification binaire (valide/invalide).
+Synthetic quantum-state dataset for binary classification (valid/invalid).
 
-### Caractéristiques
+### Characteristics
 
-- **Taille :** 10 000 échantillons (5000 valides + 5000 invalides)
-- **Dimension :** 4 (espace de Hilbert de dimension 4)
-- **Features :** 9 colonnes numériques + 1 target binaire
-- **Équilibrage :** 50% classe 0, 50% classe 1
+- **Size:** 10,000 samples (5,000 valid + 5,000 invalid)
+- **Dimension:** 4 (Hilbert space of dimension 4)
+- **Features:** 9 numeric columns + 1 binary target
+- **Balance:** 50% class 0, 50% class 1
 
-### Colonnes
+### Columns
 
-| Colonne | Type | Description | Plage |
-|---------|------|-------------|-------|
-| `state_id` | int | Identifiant unique | 0 à 9999 |
-| `c0_real` | float | Partie réelle de c₀ | ℝ |
-| `c0_imag` | float | Partie imaginaire de c₀ | ℝ |
-| `c1_real` | float | Partie réelle de c₁ | ℝ |
-| `c1_imag` | float | Partie imaginaire de c₁ | ℝ |
-| `c2_real` | float | Partie réelle de c₂ | ℝ |
-| `c2_imag` | float | Partie imaginaire de c₂ | ℝ |
-| `c3_real` | float | Partie réelle de c₃ | ℝ |
-| `c3_imag` | float | Partie imaginaire de c₃ | ℝ |
-| `norm_squared` | float | ||ψ||² = Σᵢ|cᵢ|² | [0, +∞) |
-| `is_valid` | int | Label: 1=valide, 0=invalide | {0, 1} |
+| Column | Type | Description | Range |
+|--------|------|-------------|-------|
+| `state_id` | int | Unique identifier | 0 to 9999 |
+| `c0_real` | float | Real part of c0 | R |
+| `c0_imag` | float | Imaginary part of c0 | R |
+| `c1_real` | float | Real part of c1 | R |
+| `c1_imag` | float | Imaginary part of c1 | R |
+| `c2_real` | float | Real part of c2 | R |
+| `c2_imag` | float | Imaginary part of c2 | R |
+| `c3_real` | float | Real part of c3 | R |
+| `c3_imag` | float | Imaginary part of c3 | R |
+| `norm_squared` | float | norm^2 = sum_i \|c_i\|^2 | [0, +inf) |
+| `is_valid` | int | Label: 1=valid, 0=invalid | {0, 1} |
 
-### Condition de Validité
+### Validity condition
 
-Un état quantique |ψ⟩ = (c₀, c₁, c₂, c₃) est **valide** si et seulement si :
+A quantum state |psi> = (c0, c1, c2, c3) is **valid** if and only if:
 ```
-||ψ||² = |c₀|² + |c₁|² + |c₂|² + |c₃|² = 1
+norm^2 = |c0|^2 + |c1|^2 + |c2|^2 + |c3|^2 = 1
 ```
 
-où |cᵢ|² = (partie_réelle)² + (partie_imaginaire)²
+where |c_i|^2 = (real part)^2 + (imaginary part)^2.
 
-### Stratégies de Génération
+### Generation strategies
 
-**États valides (`is_valid=1`) :**
-- Stratégie : `random` (génération gaussienne + normalisation)
-- Garantie : ||ψ||² = 1.000... (précision machine)
+**Valid states (`is_valid=1`):**
+- Strategy: `random` (Gaussian generation + normalization)
+- Guarantee: norm^2 = 1.000... (machine precision)
 
-**États invalides (`is_valid=0`) :**
-- Stratégie : `mixed` (combinaison de plusieurs méthodes)
-  - 30% scaling (multiplication par k ≠ 1)
-  - 30% noise (ajout de bruit sans renormalisation)
-  - 30% direct (génération sans normalisation)
-  - 10% extreme (cas pathologiques : quasi-nuls, énormes, déséquilibrés)
-- Plage de ||ψ||² : [0.0001, ~10]
+**Invalid states (`is_valid=0`):**
+- Strategy: `mixed` (combination of several mechanisms)
+  - 30% scaling (multiplication by k != 1)
+  - 30% noise (additive noise without renormalization)
+  - 30% direct (generation without normalization)
+  - 10% extreme (pathological cases: near-null, huge, unbalanced)
+- norm^2 range: [~0.0001, ~10]
 
-### Reproductibilité
+### Reproducibility
 
-- **Seed :** 42
-- Tous les états peuvent être régénérés avec le code dans `src/data_generation.py`
+- **Seed:** 42
+- The full dataset regenerates identically with
+  `create_dataset(n_valid=5000, n_invalid=5000, dim=4, seed=42)` -
+  notebook `04__create_dataset.ipynb` is the executable documentation of
+  this file (re-running it reproduces the CSV byte for byte).
 
 ### Usage
+
 ```python
 import pandas as pd
+from qsv.paths import MAIN_DATASET
 
-# Charger le dataset
-df = pd.read_csv('data/processed/quantum_states_dataset.csv')
+df = pd.read_csv(MAIN_DATASET)
 
-# Séparer features et target
-X = df.drop(['state_id', 'is_valid'], axis=1)
-y = df['is_valid']
-
-# Ou utiliser la fonction du module
-from src.data_generation import load_dataset
-df = load_dataset()
+X = df.drop(["state_id", "is_valid"], axis=1)
+y = df["is_valid"]
 ```
-
-### Fichiers
-
-| Fichier | Description | Taille |
-|---------|-------------|--------|
-| `quantum_states_dataset.csv` | Dataset par défaut | ~1.5 MB |
-| `quantum_states_dim4_n10000_seed42.csv` | Même dataset (nom descriptif) | ~1.5 MB |
 
 ### Notes
 
-- Les features `c{i}_real` et `c{i}_imag` sont **indépendantes** (pas de corrélation forte)
-- La feature `norm_squared` est **dérivée** des autres, mais utile pour le ML
-- Le dataset est **mélangé** (shuffle=True) pour éviter tout biais d'ordre
-- Aucune valeur manquante
+- The `c{i}_real` / `c{i}_imag` features are independent (no strong correlation)
+- `norm_squared` is **derived** from the others and *defines* the label:
+  using it (or any bijection of it) as a training feature is target
+  leakage - see the notebook 07 case study before touching it
+- The dataset is shuffled (shuffle=True) to avoid any ordering bias
+- No missing values
 
 ### Versions
 
-- **v1.0** (2024-11-12) : Dataset initial, 10k échantillons, dim=4
+- **v1.0** (2025-11-12): initial dataset, 10k samples, dim=4
+- **v2.0** (2026-07-07): regenerated after the F2 boundary fix (see below),
+  seed=42, byte-for-byte reproducible
 
 ---
 
-**Date de création :** 2025-11-12  
-**Auteur :** MklZenin 
-**Projet :** Quantum State Validator
----
+## Class-boundary definition (F2 - audit 2026-07-07)
 
-## Définition de la frontière de classe (F2 — audit 2026-07-07)
+Since the F2 fix, the labeling rule is **unique and centralized** in
+`generate_invalid_states` (parameter `norm_margin`, default 0.05):
 
-Depuis la correction F2, la règle de labellisation est **unique et centralisée**
-dans `generate_invalid_states` (paramètre `norm_margin`, défaut 0.05) :
-
-| Classe | Garantie sur ‖ψ‖² = Σᵢ\|cᵢ\|² |
+| Class | Guarantee on norm^2 = sum_i \|c_i\|^2 |
 |---|---|
-| Valide (`is_valid = 1`) | ‖ψ‖² = 1 à la précision machine (~10⁻¹⁵) |
-| Invalide (`is_valid = 0`) | \|‖ψ‖² − 1\| ≥ `norm_margin` (bande interdite) |
+| Valid (`is_valid = 1`) | norm^2 = 1 to machine precision (~1e-15) |
+| Invalid (`is_valid = 0`) | \|norm^2 - 1\| >= `norm_margin` (forbidden band) |
 
-**Lecture** : aucun état invalide ne peut se trouver à moins de `norm_margin`
-de la norme unité. La bande interdite ]1 − marge, 1 + marge[ matérialise
-l'ambiguïté physique : un état à ‖ψ‖² = 1.001 est indistinguable d'une erreur
-d'arrondi et n'a donc pas de label défendable.
+**Reading**: no invalid state can lie within `norm_margin` of the unit norm.
+The forbidden band (1 - margin, 1 + margin) embodies the physical ambiguity:
+a state at norm^2 = 1.001 is indistinguishable from a rounding error and
+therefore has no defensible label.
 
-Historique : avant cette correction, `scaling` excluait k ∈ [0.95, 1.05] mais
-`noise`/`direct` pouvaient produire des états dans cette zone (garantie limitée
-à \|‖ψ‖² − 1\| > 10⁻⁴) — la frontière dépendait de la stratégie de génération.
-Vérifié par `tests/test_data_generation.py::test_invalid_states_respect_norm_margin`.
-
-**Note** : le dataset `quantum_states_10000.csv` a été **régénéré le
-2026-07-07 après la correction F2** avec `create_dataset(n_valid=5000,
-n_invalid=5000, dim=4, seed=42)` — reproductible à l'identique. La garantie
-de marge est vérifiée à la génération et par la suite de tests.
+History: before this fix, `scaling` excluded k in [0.95, 1.05] but
+`noise`/`direct` could produce states inside that zone (guarantee limited to
+\|norm^2 - 1\| > 1e-4) - the boundary depended on the generation strategy.
+Locked by `tests/test_data_generation.py::test_invalid_states_respect_norm_margin`.

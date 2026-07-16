@@ -42,3 +42,22 @@ six aerospace application domains, the 25 references, milestone-status roadmap
 summary, technologies, contributing summary, license and citation (year updated to
 2026). Remaining in the checklist: notebooks 01-06 (slim down + translate), notebooks
 07-10 markdown, CONTRIBUTING/data-README.
+
+## Addendum — part 4: the notebooks are English, the translation checklist closes
+
+- Notebooks 01-06 rebuilt lean and in English per the project convention
+  (implementation-focused, short comments; the detailed pedagogy lives in notebook 13
+  and the README; French originals remain in git history). Notebook 04 re-executed
+  still reproduces the dataset byte for byte. The stray 01_quantum_theory.pyi removed.
+- Notebook 07: warning cell translated; original outputs deliberately preserved as
+  the historical record of the leakage run.
+- Notebooks 08-10 rebuilt in English and re-executed: deterministic seeds reproduce
+  the exact published numbers (0.9368 / 0.9636 / 0.9388 / 0.9620 / 0.9668 for
+  notebook 10, etc.), so every interpretation stays word-for-word accurate.
+- data/README translated AND corrected: the stale "norm_squared is useful for ML"
+  note is now the leakage warning; filename, package imports and version history
+  updated. CONTRIBUTING translated with the English-language rule added.
+- ROADMAP/CHANGELOG stay French as internal steering documents (noted in ROADMAP).
+
+The translation checklist is closed. Remaining before v0.5.0: review the Emergent
+web app against qsv/validators.py.

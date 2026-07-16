@@ -1,57 +1,59 @@
-# Contribuer à Quantum State Validator
+# Contributing to Quantum State Validator
 
-Merci de votre intérêt ! Ce projet est un environnement d'apprentissage de la
-mécanique quantique et du ML : la **rigueur scientifique et la pédagogie
-priment sur tout le reste**. Une contribution qui rend le code plus rapide
-mais moins compréhensible sera refusée ; une contribution qui documente une
-erreur instructive sera célébrée (voir le notebook 07).
+Thank you for your interest! This project is a learning environment for
+quantum mechanics and honest ML: **scientific rigor and pedagogy outrank
+everything else**. A contribution that makes the code faster but less
+understandable will be declined; a contribution that documents an
+instructive mistake will be celebrated (see notebook 07).
 
-## Mise en place
+## Setup
 
 ```bash
 git clone https://github.com/Mkl1984/quantum_state_validator.git
 cd quantum_state_validator
-python -m venv venv && source venv/bin/activate   # .\venv\Scripts\Activate.ps1 sous Windows
-pip install -r requirements.txt
-pytest tests/ -q          # 28 tests doivent passer avant de commencer
+python -m venv venv && source venv/bin/activate   # .\venv\Scripts\Activate.ps1 on Windows
+pip install -e ".[api,dev]"
+pytest tests/ -q          # the whole suite must pass before you start
 ```
 
-## Règles du projet
+## Project rules
 
-1. **Aucun target leakage.** Toute nouvelle feature d'entraînement doit être
-   classée invariante ou sensible à l'échelle dans `src/features.py`, avec un
-   test d'invariance si elle prétend être invariante. Le test
-   `test_invariant_features_are_scale_invariant` est non négociable.
-2. **La frontière de classe est unique** : |‖ψ‖² − 1| ≥ `norm_margin` pour tout
-   état invalide (voir `data/README.md`). Ne la contournez jamais localement.
-3. **Les bibliothèques ne parlent pas** : `logging`, jamais `print()` dans `src/`.
-4. **Chemins via `src/paths.py`** — jamais de chemins relatifs au cwd.
-5. **Chaque fonction publique** : docstring avec formules disséquées et leur
-   lecture en français, hypothèses, et signification physique du résultat.
-6. **Chaque changement de comportement** : un test qui le verrouille.
+1. **No target leakage.** Any new training feature must be classified as
+   scale-invariant or scale-sensitive in `qsv/features.py`, with an
+   invariance test if it claims to be invariant. The
+   `test_invariant_features_are_scale_invariant` test is non-negotiable.
+2. **The class boundary is unique**: |norm^2 - 1| >= `norm_margin` for every
+   invalid state (see `data/README.md`). Never bypass it locally.
+3. **Libraries do not talk**: `logging`, never `print()` inside `src/`.
+4. **Paths go through `qsv/paths.py`** - never cwd-relative paths in
+   repository workflows.
+5. **Every public function** carries a docstring with the formulas, the
+   hypotheses, and the physical meaning of the result.
+6. **Every behaviour change** comes with a test that locks it.
 
-## Style et qualité
+## Style and quality
 
-- Formatage : `black src/ tests/` (vérifié en CI, bloquant)
-- Tests : `pytest tests/ -q` (bloquant en CI, Python 3.10 et 3.12)
-- Notebooks : exécutés de bout en bout avant commit, outputs inclus
+- Formatting: `black src/ tests/` (checked in CI, blocking)
+- Tests: `pytest tests/ -q` (blocking in CI, Python 3.10 and 3.12)
+- Notebooks: executed end to end before committing, outputs included
+- Language: everything in English (code, comments, docs, figures)
 
-## Workflow Git
+## Git workflow
 
-- Branches : `feat/<sujet>`, `fix/<sujet>`, `docs/<sujet>` depuis `main`
-- Commits : [Conventional Commits](https://www.conventionalcommits.org/) en
-  anglais — `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`, `ci:`
-- Un commit = un changement logique. Le message explique le *pourquoi*.
-- Pull request vers `main` : la CI doit être verte ; décrivez l'impact
-  scientifique éventuel (features, frontière de classe, modèle de bruit)
+- Branches: `feat/<topic>`, `fix/<topic>`, `docs/<topic>` from `main`
+- Commits: [Conventional Commits](https://www.conventionalcommits.org/) in
+  English - `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`, `ci:`
+- One commit = one logical change. The message explains the *why*.
+- Pull requests target `main`: CI must be green; describe any scientific
+  impact (features, class boundary, noise model)
 
-## Signaler un problème
+## Reporting an issue
 
-Ouvrez une issue avec : version Python, OS, étapes de reproduction minimales,
-comportement attendu vs observé. Pour une question scientifique (formulation,
-modèle de bruit, features), citez la section du README ou du notebook concernée.
+Open an issue with: Python version, OS, minimal reproduction steps,
+expected vs observed behaviour. For a scientific question (formulation,
+noise model, features), cite the relevant README section or notebook.
 
-## Licence
+## License
 
-En contribuant, vous acceptez que votre contribution soit publiée sous
-licence MIT (voir LICENSE).
+By contributing, you agree that your contribution is released under the
+MIT license (see LICENSE).

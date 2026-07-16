@@ -6,6 +6,10 @@ versionnement [SemVer](https://semver.org/lang/fr/).
 ## [Non publié]
 
 ### Ajouté
+- Phase finale : les 13 notebooks sont en anglais — 01-06 reconstruits
+  sobres (convention « implémentation seule »), 07 archivé avec
+  avertissement EN et sorties d'époque, 08-10 retraduits et ré-exécutés
+  aux chiffres identiques ; CONTRIBUTING et data/README traduits
 - Phase finale : README traduit intégralement en anglais (580 lignes,
   structure, résultats et 25 références préservés)
 - Phase finale : l'intégralité du code (`src/qsv/` et `tests/`) est
