@@ -16,6 +16,7 @@ Two distinct, combinable usage modes:
 Scientific background: executed notebooks 08-12 in the repository.
 """
 
+from qsv.density import DensityValidationResult, validate_density_matrix
 from qsv.validators import (
     PreparationResult,
     ValidationResult,
@@ -28,6 +29,8 @@ __version__ = "0.5.0"
 __all__ = [
     "validate_state",
     "preparation_qa",
+    "validate_density_matrix",
+    "DensityValidationResult",
     "ValidationResult",
     "PreparationResult",
     "__version__",
