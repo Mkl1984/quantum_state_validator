@@ -61,3 +61,16 @@ summary, technologies, contributing summary, license and citation (year updated 
 
 The translation checklist is closed. Remaining before v0.5.0: review the Emergent
 web app against qsv/validators.py.
+
+## Addendum — part 5 (2026-07-16): code-only notebook refactor (zero re-execution)
+
+Per the new structure directive: notebooks 08-12 are now code-only (one short pointer
+cell + code cells with their outputs), and every explanation they carried was moved
+verbatim into `13_project_report.ipynb`, which gained a table of contents and a
+"Per-notebook documentation" chapter with one section per notebook (22 markdown cells
+absorbed, nothing lost). Implementation choice for maximum efficiency and absolute
+output preservation: the code cells and their stored outputs were kept byte-identical
+(no re-execution, no code edit), so rule 6 (unchanged outputs/results) holds by
+construction. Scripted quality review: 1 markdown cell per code notebook (the pointer),
+sequential execution counts, all outputs present, published numbers spot-checked
+(0.9132 / 0.9668 / 0.0110) - all pass.
