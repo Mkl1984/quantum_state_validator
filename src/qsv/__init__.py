@@ -17,6 +17,13 @@ Scientific background: executed notebooks 08-12 in the repository.
 """
 
 from qsv.density import DensityValidationResult, validate_density_matrix
+from qsv.tomography import (
+    CountingResult,
+    NormEstimate,
+    estimate_norm_squared,
+    sample_counts,
+    validate_counts,
+)
 from qsv.validators import (
     PreparationResult,
     ValidationResult,
@@ -30,8 +37,13 @@ __all__ = [
     "validate_state",
     "preparation_qa",
     "validate_density_matrix",
+    "validate_counts",
+    "sample_counts",
+    "estimate_norm_squared",
     "DensityValidationResult",
     "ValidationResult",
     "PreparationResult",
+    "CountingResult",
+    "NormEstimate",
     "__version__",
 ]
