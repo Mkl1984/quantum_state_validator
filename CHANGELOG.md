@@ -6,6 +6,16 @@ versionnement [SemVer](https://semver.org/lang/fr/).
 ## [Non publié]
 
 ### Ajouté
+- P0 : `qsv.tomography` — modèle de comptage exact (k_i ~ Poisson(N|c_i|²))
+  remplaçant la simplification gaussienne σ = 1/(2√N), dernière limite
+  scientifique déclarée du projet. Estimateur non biaisé (aucune correction
+  2dσ² nécessaire), p-valeur de Poisson bilatérale exacte calculée par
+  sommation en espace log (sans dépendance scipy), drapeau de budget
+  N ≥ 4/marge². Notebook 15 (code-only) + section doc dans le 13 ; README,
+  ROADMAP et section « limites » mis à jour ; 23 nouveaux tests (total 104).
+  Résultat : l'abaque du notebook 12 survit au changement de modèle (accord
+  à ~1 point), le terme 2dσ² est un artefact du modèle gaussien, et la
+  non-identifiabilité de la norme à partir des seules fréquences est prouvée
 - P0 : `qsv.density` — validation des matrices densité (hermiticité, trace
   unité, positivité) en modes exact et tomographique bruité ; seuils
   calibrés empiriquement (3600 essais) ; générateurs Ginibre + causes

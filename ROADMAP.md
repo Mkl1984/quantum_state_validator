@@ -117,7 +117,44 @@ PennyLane/Cirq par duck-typing, zéro dépendance framework), ✅ CLI
 en attente du tag v0.5.0 (voir docs/RELEASING.md). ✅ `qsv.density`
 (hermiticité/trace/positivité, mode bruité calibré empiriquement — le fait
 tomographique des petites valeurs propres négatives est géré, notebook 14).
-Reste en P0 : `qsv.tomography` (multinomial).
+✅ `qsv.tomography` (17 sept. 2026) — modèle de comptage exact (Poisson) qui
+remplace la simplification gaussienne, dernière limite scientifique déclarée
+du projet. **Le P0 code est clos.**
+
+Ce que l'expérience a montré (notebook 15, chiffres avant interprétation) :
+- l'estimateur de comptage est **non biaisé** : sur 200 000 répétitions
+  (d ∈ {2,4,8}, N ∈ {100,1000}), le plus grand biais mesuré vaut 4,5e-4, soit
+  environ deux erreurs de Monte-Carlo (résolution 2,2e-4), et les douze mesures
+  se dispersent autour de zéro sans signe systématique ; la dispersion suit
+  sqrt(||psi||²/N) à 0,3 % près ;
+- le terme 2dσ² de `validators.py` est un **artefact du modèle gaussien**, pas
+  un fait de comptage : le biais gaussien mesuré suit 2dσ² sur tout (d, N)
+  testé (+0.08018 contre 0.08000 à d=16, N=100) tandis que celui du comptage
+  ne dépasse jamais 2,2e-4 — sa propre résolution de Monte-Carlo — et surtout
+  **ne croît pas avec d** : c'est l'observation discriminante, le biais gaussien
+  est proportionnel à d, celui du comptage à rien. La correction reste juste
+  *dans son modèle* — elle est conservée dans `validators.py` pour cette
+  raison ;
+- **les deux modèles s'accordent sur la dispersion** (sd 0.0498 contre 0.0500
+  à d=4, N=400) : le choix σ = 1/(2√N) du notebook 08 était bon pour la
+  quantité qui pilote réellement la décision ;
+- **l'abaque du notebook 12 survit** : l'écart de FPR ne dépasse jamais
+  0,6 point et celui de FNR 1,7 point, les deux maximaux au plus petit budget
+  où tous les taux sont de toute façon dominés par le bruit ; aucun biais
+  systématique dans une direction. Les
+  jalons 1 à 4 tiennent tels que publiés. Quatrième résultat « négatif »
+  conservé plutôt qu'enterré.
+- **non-identifiabilité prouvée** : conditionnées au total, les fréquences
+  k/Σk coïncident à 3 décimales pour ||psi||² ∈ {0.85, 1.00, 1.20} (la 4e
+  décimale bouge encore d'une unité : bruit de comptage résiduel à N = 400 000,
+  pas dépendance résiduelle à la norme) alors que les totaux diffèrent de 41 %. Toute l'information de norme vit dans le
+  comptage total — une vérification de norme exige une **exposition calibrée**.
+  C'est l'invariance d'échelle du notebook 07 vue depuis l'autre bout.
+
+Conséquence documentaire : la section « hypothèses et limites » du notebook 13
+ne liste plus le bruit gaussien comme limite mais comme approximation mesurée ;
+la limite ouverte principale devient la **population d'invalides synthétique**
+(états adverses collés à la marge).
 
 **5a (fait)** : ✅ API FastAPI (`src/api.py`, EN) — décision d'architecture
 issue du jalon 4 : l'API sert les validateurs GAGNANTS (test à seuil corrigé

@@ -5,7 +5,7 @@
 [![CI](https://github.com/Mkl1984/quantum_state_validator/actions/workflows/ci.yml/badge.svg)](https://github.com/Mkl1984/quantum_state_validator/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
-[![Tests](https://img.shields.io/badge/tests-57%20passed-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-104%20passed-brightgreen.svg)](tests/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 ---
@@ -99,13 +99,17 @@ quantum_state_validator/
 |   |-- 13_project_report.ipynb        # Full project report + error retrospective
 |-- src/qsv/                     # Installable package (pip install -e .)
 |   |-- validators.py            # Pure decision logic - the library mode
+|   |-- tomography.py            # Exact finite-shot counting model (Poisson)
+|   |-- density.py               # Density matrices: Hermiticity, trace, positivity
+|   |-- adapters.py              # Duck-typed Qiskit / PennyLane / Cirq conversion
+|   |-- cli.py                   # 'qsv validate' - the CI guardrail
 |   |-- api.py                   # FastAPI HTTP service - thin wrapper
 |   |-- data_generation.py       # Valid/invalid states, F2 boundary guarantee
 |   |-- features.py              # Invariant vs sensitive features + noise models
 |   |-- preparation.py           # Known-target preparation QA
 |   |-- paths.py                 # Repository paths (notebooks)
 |   |-- preprocessing.py         # Stratified 60/20/20 split + leak-free scaling
-|-- tests/                       # 57 pytest tests (anti-leakage, F2 guarantee, splits)
+|-- tests/                       # 104 pytest tests (anti-leakage, F2 guarantee, splits)
 |-- reports/                     # Full audit + session reports
 |-- CHANGELOG.md . CONTRIBUTING.md . LICENSE . ROADMAP.md
 |-- requirements.txt . pyproject.toml
@@ -201,6 +205,28 @@ result = validate_state(real, imag, n_shots=500, margin=0.05)
 result = preparation_qa(real, imag, target_real, target_imag)
 print(result.error_type)   # "ok" | "gain_error" | "pointing_error" | ...
 ```
+
+### Working from raw detector counts
+
+`validate_state` takes reconstructed amplitudes. If what you have is what a counting
+experiment actually produces - integers over a calibrated exposure - use the exact
+model instead: it is unbiased, it needs no correction term, and it reports an exact
+Poisson p-value rather than a Gaussian approximation.
+
+```python
+from qsv import sample_counts, validate_counts
+
+counts = sample_counts(real, imag, n_shots=6400, seed=0)   # k_i ~ Poisson(N |c_i|^2)
+result = validate_counts(counts, n_shots=6400, margin=0.05)
+print(result.norm_squared, result.p_value, result.budget_ok)
+```
+
+One caveat is structural rather than practical: **the exposure N must be known**.
+Outcome *frequencies* alone are blind to the norm - rescaling the state leaves them
+unchanged - so all the validity information sits in the total count. Notebook 15
+proves this and measures what the Gaussian simplification used elsewhere in the
+project actually costs (short answer: under two points of error rate at the worst
+budget, and a bias term that is an artefact of squaring additive noise).
 
 ### Mode 2: HTTP service (from any language)
 
@@ -465,13 +491,18 @@ Advanced EDA (3D Plotly), quantum feature engineering, stratified 60/20/20 split
 - Notebook 07: first evaluation, invalidated by target leakage - **archived as a case study**
 - Measurement-noise reformulation (notebook 08): ROC per budget N, the $2d\sigma^2$ bias, comparison to the optimal statistical test
 - Class-boundary guarantee (norm_margin) + reproducible regenerated dataset
-- 57 pytest tests (mechanical anti-leakage check included) + GitHub Actions CI
+- 104 pytest tests (mechanical anti-leakage check included) + GitHub Actions CI
 
 ### Milestone 4: Where ML earns its place (v0.4.0) - DONE
 Correlated noise (negative result owned), calibration drift (hybrid physics+ML wins), known-target preparation QA (isotropy limit broken), dimension scaling and N-vs-error sizing curves.
 
 ### Milestone 5: Production and interface (v1.0.0) - IN PROGRESS
-Installable package + REST API done; interactive pedagogical web app in progress.
+Installable package, REST API, CLI guardrail and framework adapters done.
+Scientific scope closed on the code side: `qsv.density` extends validity to mixed
+states (positivity + unit trace), and `qsv.tomography` replaces the Gaussian
+simplification with the exact Poisson counting model - the comparison (notebook 15)
+shows the milestone 1-4 conclusions survive it. Remaining: the interactive
+pedagogical web app.
 
 ---
 
@@ -496,7 +527,7 @@ Installable package + REST API done; interactive pedagogical web app in progress
 - IDE: VS Code with Python and Jupyter extensions
 - Version control: Git + GitHub (Conventional Commits, release tags)
 - Environment: venv or conda
-- Quality: black (formatting), pytest (57 tests), GitHub Actions (CI on 3.10/3.12)
+- Quality: black (formatting), pytest (104 tests), GitHub Actions (CI on 3.10/3.12)
 - Type annotations live directly in the modules
 
 ---
@@ -579,12 +610,16 @@ If you use this code in your work, please cite:
 
 ### Possible extensions
 
-- Multinomial tomography model (replacing the Gaussian simplification)
-- Adversarial invalid states hugging the margin
-- Mixed states (density matrices): validity becomes positivity + unit trace
-- Out-of-distribution calibration drift
+- Adversarial invalid states hugging the margin - the main open honesty gap: every
+  accuracy figure in this repository describes our own generator's population
+- Out-of-distribution calibration drift (unseen drift realizations)
+- Multipartite structure: entanglement and separability, where validity stops being
+  a single scalar condition
 - Deep learning and quantum ML (variational circuits)
 - Real experimental data
+
+Two former entries are now done: the exact tomography model (`qsv.tomography`,
+notebook 15) and mixed states (`qsv.density`, notebook 14).
 
 ### Applications
 
@@ -592,5 +627,5 @@ See the detailed [Applications - Aerospace and Aeronautics](#applications---aero
 
 ---
 
-Last update: July 2026
+Last update: September 2026
 Version: 0.5.0-dev - see [CHANGELOG.md](CHANGELOG.md)
